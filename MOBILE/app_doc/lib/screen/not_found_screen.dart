@@ -51,7 +51,7 @@ class NotFoundScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
-            InfoApp(User(id: 0, idRegional: 0, login: '', matricula: 0, nome: '', senha: '', situacao: 0)),
+            InfoApp(User()),
           ],
         ),
       ),

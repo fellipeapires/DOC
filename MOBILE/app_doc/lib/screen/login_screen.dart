@@ -2,8 +2,8 @@
 
 import 'dart:convert';
 
+import 'package:app_doc/provider/user_provider.dart';
 import 'package:flutter/material.dart';
-// import 'package:svi/provider/user_provider.dart';
 import '../component/circular_progress.dart';
 import '../component/info_app.dart';
 import '../model/user.dart';
@@ -19,70 +19,40 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
-  // final userProvider = UserProvider();
+  final userProvider = UserProvider();
   final List<User> listaUser = [];
   final indexMsg = {'value': 0};
 
   @override
   initState() {
     super.initState();
-    // getUserApi(context);
+    getUserApi(context);
   }
 
-  // Future<void> getUsuario(String login, String senha) async {
-  //   var user = null;
-  //   if (listaUser.isNotEmpty) {
-  //     setState(() {
-  //       listaUser.clear();
-  //     });
-  //   }
-  //   await userProvider.getUsuario(login, senha).then((result) => {
-  //         result.forEach((element) => {
-  //               user = User(
-  //                 id: element['id'],
-  //                 idRegional: element['idRegional'],
-  //                 nome: element['nome'],
-  //                 login: element['login'],
-  //                 senha: element['senha'],
-  //                 matricula: element['matricula'],
-  //                 situacao: element['situacao'],
-  //               ),
-  //               listaUser.add(user),
-  //             }),
-  //         setState(() {
-  //           listaUser;
-  //         }),
-  //       });
-  // }
-
-  // Future<void> _autenticar(BuildContext context) async {
-  //   if (_loginController.text.isEmpty || _loginController.text.trim() == '' || _senhaController.text.isEmpty || _senhaController.text.trim() == '') {
-  //     return;
-  //   }
-  //   setState(() {
-  //     loading.value = true;
-  //   });
-  //   await getUsuario(_loginController.text, _senhaController.text);
-  //   bool isUser = false;
-  //   User user = User();
-  //   for (int i = 0; i < listaUser.length; i++) {
-  //     if (_loginController.text == listaUser[i].login && _senhaController.text == listaUser[i].senha) {
-  //       isUser = true;
-  //       user = listaUser[i];
-  //       break;
-  //     }
-  //   }
-  //   if (isUser) {
-  //     _loginController.text = '';
-  //     _senhaController.text = '';
-  //     Utility.setAppRouter(context, AppRoutes.HOME, user);
-  //   } else {
-  //     Utility.snackbar(context, 'LOGIN OU SENHA INCORRETOS!');
-  //   }
-  //   setState(() {
-  //     loading.value = false;
-  //   });
-  // }
+  Future<void> getUsuario(String login, String senha) async {
+    var user = null;
+    if (listaUser.isNotEmpty) {
+      setState(() {
+        listaUser.clear();
+      });
+    }
+    await userProvider.getUsuario(login, senha).then((result) => {
+          result.forEach((element) => {
+                user = User(),
+                user.id = element['id'],
+                user.idRegional = element['idRegional'],
+                user.nome = element['nome'],
+                user.login = element['login'],
+                user.senha = element['senha'],
+                user.matricula = element['matricula'],
+                user.situacao = element['situacao'],
+                listaUser.add(user),
+              }),
+          setState(() {
+            listaUser;
+          }),
+        });
+  }
 
   Future<void> _autenticar(BuildContext context) async {
     if (_loginController.text.isEmpty || _loginController.text.trim() == '' || _senhaController.text.isEmpty || _senhaController.text.trim() == '') {
@@ -91,57 +61,69 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       loading.value = true;
     });
+    await getUsuario(_loginController.text, _senhaController.text);
     bool isUser = false;
-    User user = User(id: 1, idRegional: 1, login: '', matricula: 1010, nome: 'ADMIN', senha: '', situacao: 1);
-    Utility.setAppRouter(context, AppRoutes.HOME, user);
-    _loginController.text = '';
-    _senhaController.text = '';
+    User user = User();
+    for (int i = 0; i < listaUser.length; i++) {
+      if (_loginController.text == listaUser[i].login && _senhaController.text == listaUser[i].senha) {
+        isUser = true;
+        user = listaUser[i];
+        break;
+      }
+    }
+    if (isUser) {
+      _loginController.text = '';
+      _senhaController.text = '';
+      Utility.setAppRouter(context, AppRoutes.HOME, user);
+    } else {
+      Utility.snackbar(context, 'LOGIN OU SENHA INCORRETOS!');
+    }
     setState(() {
       loading.value = false;
     });
   }
 
-  // Future<void> getUserApi(BuildContext context) async {
-  //   await Utility.getStatusNet(context);
-  //   if (Utility.isNet) {
-  //     loading.value = true;
-  //     User user = null;
-  //     final future = userProvider.getUser();
-  //     future.then(
-  //       (response) => {
-  //         jsonDecode(response.body).forEach(
-  //           (element) => {
-  //             user = User(),
-  //             user.id = int.tryParse(element['id'].toString()),
-  //             user.idRegional = int.tryParse(element['idRegional'].toString()),
-  //             user.nome = element['nome'],
-  //             user.login = element['login'],
-  //             user.senha = element['senha'],
-  //             user.matricula = int.tryParse(element['matricula'].toString()),
-  //             user.situacao = int.tryParse(element['situacao'].toString()),
-  //             userProvider.insert({
-  //               'id': user.id,
-  //               'idRegional': user.idRegional,
-  //               'nome': user.nome,
-  //               'login': user.login,
-  //               'senha': user.senha,
-  //               'matricula': user.matricula,
-  //               'situacao': user.situacao,
-  //             }),
-  //           },
-  //         ),
-  //         loading.value = false,
-  //       },
-  //     );
-  //   } else {
-  //     if (indexMsg['values'] == 0) {
-  //       setState(() {
-  //         indexMsg['value']++;
-  //       });
-  //       Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
-  //     }
-  //   }
-  // }
+  Future<void> getUserApi(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    if (Utility.isNet) {
+      loading.value = true;
+      User user = User();
+      final future = userProvider.getUser();
+      future.then(
+        (response) => {
+          jsonDecode(response.body).forEach(
+            (element) => {
+              // user = User(),
+              user.id = int.tryParse(element['id'].toString())!,
+              user.idRegional = int.tryParse(element['idRegional'].toString())!,
+              user.nome = element['nome'],
+              user.login = element['login'],
+              user.senha = element['senha'],
+              user.matricula = int.tryParse(element['matricula'].toString())!,
+              user.situacao = int.tryParse(element['situacao'].toString())!,
+              userProvider.insert({
+                'id': user.id,
+                'idRegional': user.idRegional,
+                'nome': user.nome,
+                'login': user.login,
+                'senha': user.senha,
+                'matricula': user.matricula,
+                'situacao': user.situacao,
+              }),
+            },
+          ),
+          loading.value = false,
+        },
+      );
+    } else {
+      if (indexMsg['values'] == 0) {
+        setState(() {
+          indexMsg['value'] = 1;
+        });
+        Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Divider(),
-                  InfoApp(User(id: 0, idRegional: 0, login: '', matricula: 0, nome: '', senha: '', situacao: 0)),
+                  InfoApp(User()),
                 ],
               ),
             );
@@ -233,11 +215,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-late int id;
-  late int idRegional;
-  late String nome;
-  late String login;
-  late String senha;
-  late int matricula;
-  late int situacao;
