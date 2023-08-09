@@ -1,5 +1,5 @@
 class ApiUrlProvider {
-  static const _apiUrl = 'https://api-gfsvi.grupofloripark.com.br/api-gfsvi-v4';
+  static const _apiUrl = 'https://api-gfedoccomgas.grupofloripark.com.br/gfedoc';
 
   static String getApiUrl() {
     return _apiUrl;

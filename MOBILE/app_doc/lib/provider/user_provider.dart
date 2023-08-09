@@ -11,7 +11,7 @@ class UserProvider {
 
   Future getUser() {
     return http.get(
-      Uri.parse('$_apiUrl/usuario/usuariomobile'),
+      Uri.parse('$_apiUrl/usuarios/listausuariosmobile'),
     );
   }
 

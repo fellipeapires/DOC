@@ -87,20 +87,20 @@ class _LoginScreenState extends State<LoginScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       loading.value = true;
-      User user = User();
+      User user;// = User();
       final future = userProvider.getUser();
       future.then(
         (response) => {
           jsonDecode(response.body).forEach(
             (element) => {
-              // user = User(),
+              user = User(),
               user.id = int.tryParse(element['id'].toString())!,
               user.idRegional = int.tryParse(element['idRegional'].toString())!,
               user.nome = element['nome'],
               user.login = element['login'],
-              user.senha = element['senha'],
+              user.senha = element['matricula'],
               user.matricula = int.tryParse(element['matricula'].toString())!,
-              user.situacao = int.tryParse(element['situacao'].toString())!,
+              user.situacao = int.tryParse(element['ativo'].toString())!,
               userProvider.insert({
                 'id': user.id,
                 'idRegional': user.idRegional,
