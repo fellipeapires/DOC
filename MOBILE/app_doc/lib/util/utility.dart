@@ -1,10 +1,10 @@
 // ignore_for_file: missing_return, import_of_legacy_library_into_null_safe
 
 import 'package:flutter/material.dart';
-import 'package:connectivity/connectivity.dart';
+//import 'package:connectivity/connectivity.dart';
 
 class Utility {
-  static final Connectivity _connectivity = Connectivity();
+  // static final Connectivity _connectivity = Connectivity();
   static bool isNet = false;
   static String statusNet = '';
 
@@ -35,7 +35,7 @@ class Utility {
   }
 
   static Future<void> getStatusNet(BuildContext context) async {
-    await _connectivity.checkConnectivity().then((connectivityResult) {
+    /*await _connectivity.checkConnectivity().then((connectivityResult) {
       if (connectivityResult == ConnectivityResult.mobile) {
         isNet = true;
         statusNet = 'MOBILE';
@@ -46,6 +46,6 @@ class Utility {
         isNet = false;
         statusNet = 'SEM CONEXAO';
       }
-    });
+    });*/
   }
 }

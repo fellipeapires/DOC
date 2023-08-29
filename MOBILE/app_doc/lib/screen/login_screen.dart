@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       loading.value = true;
-      User user;// = User();
+      User user; // = User();
       final future = userProvider.getUser();
       future.then(
         (response) => {
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Divider(),
-                  InfoApp(User()),
+                  // InfoApp(User()),
                 ],
               ),
             );
