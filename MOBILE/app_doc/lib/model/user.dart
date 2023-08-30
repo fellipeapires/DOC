@@ -1,19 +1,20 @@
 class User {
-  late int id;
-  late int idRegional;
-  late String nome;
-  late String login;
-  late String senha;
-  late int matricula;
-  late int situacao;
+  int? id;
+  int? idRegional;
+  String? regional;
+  String? nome;
+  String? login;
+  String? senha;
+  String? matricula;
+  int? situacao;
 
-  // User({
-  //   this.id,
-  //   this.idRegional,
-  //   this.nome,
-  //   this.login,
-  //   this.senha,
-  //   this.matricula,
-  //   this.situacao,
-  // });
+  User({
+    this.id,
+    this.idRegional,
+    this.nome,
+    this.login,
+    this.senha,
+    this.matricula,
+    this.situacao,
+  });
 }

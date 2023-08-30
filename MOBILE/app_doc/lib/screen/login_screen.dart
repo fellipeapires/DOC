@@ -85,44 +85,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> getUserApi(BuildContext context) async {
     await Utility.getStatusNet(context);
-    if (Utility.isNet) {
-      loading.value = true;
-      User user; // = User();
-      final future = userProvider.getUser();
-      future.then(
-        (response) => {
-          jsonDecode(response.body).forEach(
-            (element) => {
-              user = User(),
-              user.id = int.tryParse(element['id'].toString())!,
-              user.idRegional = int.tryParse(element['idRegional'].toString())!,
-              user.nome = element['nome'],
-              user.login = element['login'],
-              user.senha = element['matricula'],
-              user.matricula = int.tryParse(element['matricula'].toString())!,
-              user.situacao = int.tryParse(element['ativo'].toString())!,
-              userProvider.insert({
-                'id': user.id,
-                'idRegional': user.idRegional,
-                'nome': user.nome,
-                'login': user.login,
-                'senha': user.senha,
-                'matricula': user.matricula,
-                'situacao': user.situacao,
-              }),
-            },
-          ),
-          loading.value = false,
-        },
-      );
-    } else {
+    // if (Utility.isNet) {
+    loading.value = true;
+    User user; // = User();
+    final future = userProvider.getUser();
+    future.then(
+      (response) => {
+        jsonDecode(response.body).forEach(
+          (element) => {
+            //print('${element['matricula']}'),
+            user = User(),
+            user.id = int.tryParse(element['id'].toString())!,
+            user.idRegional = int.tryParse(element['idRegional'].toString())!,
+            user.regional = element['regional'],
+            user.nome = element['nome'],
+            user.login = element['login'],
+            user.senha = element['matricula'],
+            user.matricula = element['matricula'],
+            user.situacao = int.tryParse(element['ativo'].toString())!,
+            userProvider.insert({
+              'id': user.id,
+              'idRegional': user.idRegional,
+              'regional': user.regional,
+              'nome': user.nome,
+              'login': user.login,
+              'senha': user.senha,
+              'matricula': user.matricula,
+              'situacao': user.situacao,
+            }),
+          },
+        ),
+        loading.value = false,
+      },
+    );
+    /* } else {
       if (indexMsg['values'] == 0) {
         setState(() {
           indexMsg['value'] = 1;
         });
         Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
       }
-    }
+    }*/
   }
 
   @override

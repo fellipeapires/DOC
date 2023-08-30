@@ -1,4 +1,6 @@
-// ignore_for_file: use_key_in_widget_constructors
+// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_print
+
+import 'dart:io';
 
 import 'package:app_doc/screen/backup_screen.dart';
 import 'package:app_doc/screen/entrega_coletivo_screen.dart';
@@ -12,9 +14,18 @@ import 'package:app_doc/screen/sincronismo_screen.dart';
 import 'package:app_doc/util/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
+  // HttpOverrides.global = EdocHttpOverrides();
   runApp(Doc());
+}
+
+class EdocHttpOverrides extends HttpOverrides {
+  /*@override
+  HttpClient createHttpClient(SecurityContext context) {
+    return super.createHttpClient(context)..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }*/
 }
 
 class Doc extends StatelessWidget {
@@ -29,6 +40,13 @@ class Doc extends StatelessWidget {
       ],
     );
     return MaterialApp(
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('pt', 'BR'),
+      ],
       debugShowCheckedModeBanner: true,
       // SUBSTITUINDO VALOR DAS ROTAS DE STRING POR CONSTANTES
       routes: {

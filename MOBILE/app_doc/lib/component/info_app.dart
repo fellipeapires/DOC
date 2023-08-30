@@ -34,7 +34,7 @@ class InfoApp extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  user.matricula == 0 ? '' : 'Matricula: ${user.matricula}',
+                  user.matricula == '0' ? '' : 'Matricula: ${user.matricula}',
                   style: Theme.of(context).textTheme.headline6,
                 ),
               ),
