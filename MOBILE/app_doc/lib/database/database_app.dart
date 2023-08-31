@@ -34,6 +34,18 @@ class DatabaseApp {
     );
   }
 
+  static Future<void> delete(String table, Map<String, dynamic> id) async {
+    final db = await DatabaseApp.dataBase();
+    await db.delete(table, where: "id = ?", whereArgs: [id]);
+  }
+
+  static Future<void> deleteAll(String table) async {
+    final db = await DatabaseApp.dataBase();
+    await db.delete(
+      table,
+    );
+  }
+
   static Future<List<Map<String, dynamic>>> getData(String table) async {
     final db = await DatabaseApp.dataBase();
     return db.query(table);

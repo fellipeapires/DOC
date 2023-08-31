@@ -35,7 +35,6 @@ class Utility {
 
   static Future<void> getStatusNet(BuildContext context) async {
     bool result = await InternetConnectionChecker().hasConnection;
-    print('$result');
     if (result == true) {
       isNet = true;
       statusNet = 'MOBILE';

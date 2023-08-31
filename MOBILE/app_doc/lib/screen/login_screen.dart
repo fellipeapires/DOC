@@ -26,7 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   initState() {
     super.initState();
+    deleteUsuarioAll();
     getUserApi(context);
+  }
+
+  Future<void> deleteUsuarioAll() async {
+    await userProvider.deleteAll('usuario');
   }
 
   Future<void> getUsuario(String login, String senha) async {
@@ -87,13 +92,12 @@ class _LoginScreenState extends State<LoginScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       loading.value = true;
-      User user; // = User();
+      User user;
       final future = userProvider.getUser();
       future.then(
         (response) => {
           jsonDecode(response.body).forEach(
             (element) => {
-              //print('${element['matricula']}'),
               user = User(),
               user.id = int.tryParse(element['id'].toString())!,
               user.idRegional = int.tryParse(element['idRegional'].toString())!,

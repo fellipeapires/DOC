@@ -19,6 +19,10 @@ class UserProvider {
     DatabaseApp.insert('usuario', data);
   }
 
+  Future<void> deleteAll(String table) async {
+    DatabaseApp.deleteAll(table);
+  }
+
   Future<List<Map<String, dynamic>>> getUsuarioAll() async {
     return DatabaseApp.getData('usuario');
   }
