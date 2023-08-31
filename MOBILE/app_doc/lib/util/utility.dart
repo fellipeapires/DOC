@@ -1,10 +1,9 @@
-// ignore_for_file: missing_return, import_of_legacy_library_into_null_safe
+// ignore_for_file: missing_return, import_of_legacy_library_into_null_safe, avoid_print
 
 import 'package:flutter/material.dart';
-//import 'package:connectivity/connectivity.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class Utility {
-  // static final Connectivity _connectivity = Connectivity();
   static bool isNet = false;
   static String statusNet = '';
 
@@ -35,17 +34,14 @@ class Utility {
   }
 
   static Future<void> getStatusNet(BuildContext context) async {
-    /*await _connectivity.checkConnectivity().then((connectivityResult) {
-      if (connectivityResult == ConnectivityResult.mobile) {
-        isNet = true;
-        statusNet = 'MOBILE';
-      } else if (connectivityResult == ConnectivityResult.wifi) {
-        isNet = true;
-        statusNet = 'WIFI';
-      } else {
-        isNet = false;
-        statusNet = 'SEM CONEXAO';
-      }
-    });*/
+    bool result = await InternetConnectionChecker().hasConnection;
+    print('$result');
+    if (result == true) {
+      isNet = true;
+      statusNet = 'MOBILE';
+    } else {
+      isNet = false;
+      statusNet = 'SEM CONEXAO';
+    }
   }
 }
