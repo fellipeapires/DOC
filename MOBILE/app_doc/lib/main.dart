@@ -98,7 +98,7 @@ class Doc extends StatelessWidget {
             fontFamily: 'OpenSans',
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Colors.white,
           ),
           headline5: const TextStyle(
             fontFamily: 'OpenSans',

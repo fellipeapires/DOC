@@ -11,6 +11,7 @@ class User {
   User({
     this.id,
     this.idRegional,
+    this.regional,
     this.nome,
     this.login,
     this.senha,

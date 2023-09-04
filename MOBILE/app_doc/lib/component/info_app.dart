@@ -12,42 +12,39 @@ class InfoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return user == null
-        ? Column(
-            children: [
-              Container(
-                width: double.infinity,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  '${Utility.getDadosApp().values.elementAt(4)} - ${Utility.getDadosApp().values.elementAt(5)}',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-            ],
-          )
-        : Column(
-            children: [
-              Container(
-                width: double.infinity,
-                alignment: Alignment.center,
-                margin: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  user.matricula == '0' ? '' : 'Matricula: ${user.matricula}',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  '${Utility.getDadosApp().values.elementAt(4)} - ${Utility.getDadosApp().values.elementAt(5)}',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-            ],
-          );
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          // margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+          padding: const EdgeInsets.all(2),
+          child: Text(
+            user.regional == null ? '' : '${user.regional}',
+            style: Theme.of(context).textTheme.headline6,
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          // margin: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+          padding: const EdgeInsets.all(2),
+          child: Text(
+            user.matricula == null || user.matricula == '0' ? '' : '${user.nome} ${user.matricula}',
+            style: Theme.of(context).textTheme.headline6,
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(2),
+          child: Text(
+            '${Utility.getDadosApp().values.elementAt(0)} - ${Utility.getDadosApp().values.elementAt(2)} - ${Utility.getDadosApp().values.elementAt(5)} - ${Utility.getDadosApp().values.elementAt(6)}',
+            style: Theme.of(context).textTheme.headline6,
+          ),
+        ),
+      ],
+    );
   }
 }

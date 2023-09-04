@@ -46,6 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 user = User(),
                 user.id = element['id'],
                 user.idRegional = element['idRegional'],
+                user.regional = element['regional'],
                 user.nome = element['nome'],
                 user.login = element['login'],
                 user.senha = element['senha'],
@@ -213,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Divider(),
-                  // InfoApp(User()),
+                  InfoApp(User()),
                 ],
               ),
             );

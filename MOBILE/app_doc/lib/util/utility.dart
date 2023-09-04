@@ -26,9 +26,10 @@ class Utility {
     return const {
       'nome': 'DOC',
       'ano': '2023',
+      'contrato': 'COMGAS',
       'copyRight': 'Copyright ©',
       'versao': '1.0.0',
-      'textoVersao': 'DOC - Versão 1.0.0',
+      'textoVersao': 'Versão 1.0.0',
       'textoCopyRight': 'Copyright © 2023',
     };
   }
