@@ -42,18 +42,20 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
     await userProvider.getUsuario(login, senha).then((result) => {
-          result.forEach((element) => {
-                user = User(),
-                user.id = element['id'],
-                user.idRegional = element['idRegional'],
-                user.regional = element['regional'],
-                user.nome = element['nome'],
-                user.login = element['login'],
-                user.senha = element['senha'],
-                user.matricula = element['matricula'],
-                user.situacao = element['situacao'],
-                listaUser.add(user),
-              }),
+          result.forEach(
+            (element) => {
+              user = User(),
+              user.id = element['id'],
+              user.idRegional = element['idRegional'],
+              user.regional = element['regional'],
+              user.nome = element['nome'],
+              user.login = element['login'],
+              user.senha = element['senha'],
+              user.matricula = element['matricula'],
+              user.situacao = element['situacao'],
+              listaUser.add(user),
+            },
+          ),
           setState(() {
             listaUser;
           }),
@@ -92,37 +94,44 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> getUserApi(BuildContext context) async {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
-      loading.value = true;
-      User user;
-      final future = userProvider.getUser();
-      future.then(
-        (response) => {
-          jsonDecode(response.body).forEach(
-            (element) => {
-              user = User(),
-              user.id = int.tryParse(element['id'].toString())!,
-              user.idRegional = int.tryParse(element['idRegional'].toString())!,
-              user.regional = element['regional'],
-              user.nome = element['nome'],
-              user.login = element['login'],
-              user.senha = element['matricula'],
-              user.matricula = element['matricula'],
-              user.situacao = int.tryParse(element['ativo'].toString())!,
-              userProvider.insert({
-                'id': user.id,
-                'idRegional': user.idRegional,
-                'regional': user.regional,
-                'nome': user.nome,
-                'login': user.login,
-                'senha': user.senha,
-                'matricula': user.matricula,
-                'situacao': user.situacao,
-              }),
-            },
-          ),
-          loading.value = false,
-        },
-      );
+      try {
+        loading.value = true;
+        User user;
+        final future = userProvider.getUser();
+        future.then(
+          (response) => {
+            jsonDecode(response.body).forEach(
+              (element) => {
+                user = User(),
+                user.id = int.tryParse(element['id'].toString())!,
+                user.idRegional = int.tryParse(element['idRegional'].toString())!,
+                user.regional = element['regional'],
+                user.nome = element['nome'],
+                user.login = element['login'],
+                user.senha = element['matricula'],
+                user.matricula = element['matricula'],
+                user.situacao = int.tryParse(element['ativo'].toString())!,
+                userProvider.insert(
+                  {
+                    'id': user.id,
+                    'idRegional': user.idRegional,
+                    'regional': user.regional,
+                    'nome': user.nome,
+                    'login': user.login,
+                    'senha': user.senha,
+                    'matricula': user.matricula,
+                    'situacao': user.situacao,
+                  },
+                ),
+              },
+            ),
+            loading.value = false,
+          },
+        );
+      } catch (Exc) {
+        print('$Exc');
+        Utility.snackbar(context, 'ERRO DE DOWNLOAD DE USUARIO: $Exc');
+      }
     } else {
       /*if (indexMsg['values'] == 0) {
         setState(() {
@@ -150,7 +159,11 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.account_circle, size: 80.0, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.account_circle,
+                    size: 80.0,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   Container(
                     alignment: Alignment.center,
                     margin: const EdgeInsets.all(5),
@@ -213,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  Divider(),
+                  //   Divider(),
                   InfoApp(User()),
                 ],
               ),

@@ -1,8 +1,10 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print, avoid_returning_null_for_void
 
 import 'dart:convert';
 //import 'dart:ui';
 
+import 'package:app_doc/component/circular_progress.dart';
+import 'package:app_doc/component/info_app.dart';
 import 'package:app_doc/model/entrega.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
-  //final List<Entrega> listaEntrega = [];
 
   void _setPage(BuildContext context, String appRoute, Object argumets) {
     Utility.setAppRouter(context, appRoute, argumets);
@@ -49,21 +50,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 entrega.codBarras = element['codBarras'],
                 entrega.observacao = element['observacao'],
                 entrega.pendente = 1,
-                entregaProvider.insert({
-                  'id': entrega.id,
-                  'grupoFaturamento': entrega.grupoFaturamento,
-                  'idImportacao': entrega.idImportacao,
-                  'roteiro': entrega.roteiro,
-                  'idGrupoFaturamento': entrega.idGrupoFaturamento,
-                  'sequencia': entrega.sequencia,
-                  'municipio': entrega.municipio,
-                  'endereco': entrega.endereco,
-                  'cep': entrega.cep,
-                  'codCliente': entrega.codCliente,
-                  'codBarras': entrega.codBarras,
-                  'observacao': entrega.observacao,
-                  'pendente': entrega.pendente
-                }),
+                entregaProvider.insert(
+                  {
+                    'id': entrega.id,
+                    'grupoFaturamento': entrega.grupoFaturamento,
+                    'idImportacao': entrega.idImportacao,
+                    'roteiro': entrega.roteiro,
+                    'idGrupoFaturamento': entrega.idGrupoFaturamento,
+                    'sequencia': entrega.sequencia,
+                    'municipio': entrega.municipio,
+                    'endereco': entrega.endereco,
+                    'cep': entrega.cep,
+                    'codCliente': entrega.codCliente,
+                    'codBarras': entrega.codBarras,
+                    'observacao': entrega.observacao,
+                    'pendente': entrega.pendente
+                  },
+                ),
               },
             ),
             loading.value = false,
@@ -71,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       } catch (Exc) {
         print('$Exc');
+        Utility.snackbar(context, 'ERRO DE CARGA: $Exc');
       }
     } else {
       Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
@@ -244,142 +248,198 @@ class _HomeScreenState extends State<HomeScreen> {
           //     ),
           //   ],
           // ),
-          GridView(
-              padding: const EdgeInsets.fromLTRB(5, 15, 5, 15),
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 3 / 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-              ),
+          ValueListenableBuilder(
+        valueListenable: loading,
+        builder: (context, value, child) {
+          if (value) {
+            return CircularProgressComponent();
+          } else {
+            return Stack(
               children: [
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'INDIVIDUAL',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.autorenew_sharp,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.ENTREGA, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'COLETIVO',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.assignment,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.ENTREGA_COLETIVO, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'SINCRONISMO',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.autorenew_sharp,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.SINNCRONISMO, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'PRODUTIVIDADE',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.data_exploration_sharp,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.PRODUTIVIDADE, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'ESTATISTICA',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.align_vertical_bottom_sharp,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.ESTATISTICA, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  label: Text(
-                    'BACKUP',
-                    style: Theme.of(context).textTheme.headline4,
-                  ),
-                  icon: Icon(
-                    Icons.backup_sharp,
-                    size: 25,
-                  ),
-                  onPressed: () => _setPage(context, AppRoutes.BACKUP, user),
-                  style: TextButton.styleFrom(
-                    elevation: 10,
-                  ),
-                ),
-              ),
-            ),
-          ]),
+                GridView(
+                    padding: const EdgeInsets.fromLTRB(5, 15, 5, 15),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 3 / 2,
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5,
+                    ),
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'INDIVIDUAL',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.mail,
+                              size: 25,
+                            ),
+                            onPressed: () => _setPage(context, AppRoutes.ENTREGA, user),
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'COLETIVO',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.mail,
+                              size: 25,
+                            ),
+                            onPressed: () => _setPage(context, AppRoutes.ENTREGA_COLETIVO, user),
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'SINC. ENTREGA',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.autorenew_sharp,
+                              size: 24,
+                            ),
+                            onPressed: () => null,
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'SINC. FOTO',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.autorenew_sharp,
+                              size: 25,
+                            ),
+                            onPressed: () => null,
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'ESTATISTICA',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.align_vertical_bottom_sharp,
+                              size: 24,
+                            ),
+                            onPressed: () => _setPage(context, AppRoutes.ESTATISTICA, user),
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'PRODUTIVIDADE',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.data_exploration_sharp,
+                              size: 24,
+                            ),
+                            onPressed: () => _setPage(context, AppRoutes.PRODUTIVIDADE, user),
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'BACKUP',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.backup_sharp,
+                              size: 25,
+                            ),
+                            onPressed: () => _setPage(context, AppRoutes.BACKUP, user),
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            label: Text(
+                              'APAGAR DADOS',
+                              style: Theme.of(context).textTheme.headline4,
+                            ),
+                            icon: Icon(
+                              Icons.delete_forever,
+                              size: 24,
+                            ),
+                            onPressed: () => null,
+                            style: TextButton.styleFrom(
+                              elevation: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
+                InfoApp(user),
+              ],
+            );
+          }
+        },
+      ),
     );
   }
 }

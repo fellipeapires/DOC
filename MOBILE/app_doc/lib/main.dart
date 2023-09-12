@@ -10,7 +10,6 @@ import 'package:app_doc/screen/home_screen.dart';
 import 'package:app_doc/screen/login_screen.dart';
 import 'package:app_doc/screen/not_found_screen.dart';
 import 'package:app_doc/screen/produtividade_screen.dart';
-import 'package:app_doc/screen/sincronismo_screen.dart';
 import 'package:app_doc/util/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -56,7 +55,6 @@ class Doc extends StatelessWidget {
         AppRoutes.ENTREGA_COLETIVO: (ctx) => EntregaColetivoScreen(),
         AppRoutes.PRODUTIVIDADE: (ctx) => ProdutividadeScreen(),
         AppRoutes.ESTATISTICA: (ctx) => EstatisticaScreen(),
-        AppRoutes.SINNCRONISMO: (ctx) => SincronismoScreen(),
         AppRoutes.BACKUP: (ctx) => BackupScreen(),
         AppRoutes.NOT_FOUND: (ctx) => NotFoundScreen(),
       },

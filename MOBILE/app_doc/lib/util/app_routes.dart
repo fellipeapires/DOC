@@ -7,7 +7,6 @@ class AppRoutes {
   static const ENTREGA_COLETIVO = '/entrega_coletivo';
   static const NOT_FOUND = '/not-found';
   static const ESTATISTICA = '/estatistica';
-  static const SINNCRONISMO = '/sincronismo';
   static const PRODUTIVIDADE = '/produtividade';
   static const BACKUP = '/backup';
 }
