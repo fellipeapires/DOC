@@ -1,5 +1,6 @@
-// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison
+// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison, unused_element, import_of_legacy_library_into_null_safe, use_build_context_synchronously
 
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
 import 'package:app_doc/util/utility.dart';
@@ -16,14 +17,40 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   final entregaProvider = EntregaProvider();
   //late int totalEntrega = 0;
   final List<String> listaCodBarras = [];
+  late String codBarras = '';
 
-  Future<void> getEntregasColetivo(String codBarras) async {
+  Future<void> readQRCode(BuildContext context) async {
+    try {
+      if (_numeroController.text.isEmpty || _numeroController.text.trim() == '') {
+        Utility.snackbar(context, 'INFORME O Nº DO ENDERECO ANTES DE SCANNEAR!');
+        return null;
+      }
+      String code = await FlutterBarcodeScanner.scanBarcode(
+        '#FF0000',
+        'CANCELAR',
+        true,
+        ScanMode.BARCODE,
+      );
+      setState(() {
+        codBarras = code != '-1' ? code : '';
+      });
+      print('CODE: $code');
+      if (code == '-1') return;
+      await getEntregasColetivo(context, codBarras);
+    } catch (Exc) {
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO LER O CODIGO!: $Exc');
+    }
+  }
+
+  Future<void> getEntregasColetivo(BuildContext context, String codBarras) async {
     loading.value = true;
+    // ignore: unused_local_variable
     String endereco = '';
     String charAt = '';
     try {
       await entregaProvider.getEntregasColetivoPendente(codBarras).then((result) => {
-            if (result[0]['cep'] != null)
+            if (result.isNotEmpty)
               {
                 setState(() {
                   charAt = result[0]['endereco'] ?? '';
@@ -35,30 +62,24 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                   }
                 }),
                 //listaCodBarras.add(result[0]['codBarras']),
-                print('${endereco.trim()} ${_numeroController.text.trim()}: ${result[0]['codBarras']}'),
-                loading.value = false,
+              }
+            else
+              {
+                Utility.snackbar(context, 'CODIGO DE BARRAS NAO ENCONTRADO!'),
               },
+            loading.value = false,
           });
     } catch (Exc) {
+      loading.value = false;
       print('$Exc');
       Utility.snackbar(context, 'ERRO AO BUSCAR COLETIVO: $Exc');
     }
   }
 
-  Future<void> _scannear(BuildContext context) async {
-    if (_numeroController.text.isEmpty || _numeroController.text.trim() == '') {
-      Utility.snackbar(context, 'INFORME O Nº DO ENDERECO ANTES DE SCANNEAR!');
-      return null;
-    }
-    print('SCANNEANDO...!');
-    var codBarras = '603103484122000027288757';
-    await getEntregasColetivo(codBarras);
-  }
-
   Future<void> _entregar(BuildContext context) async {
-    if (listaCodBarras.isEmpty) {
+    if (codBarras.trim() == '') {
       Utility.snackbar(context, 'PRIMEIRO SCANNEAR A CONTA PARA REALIZAR A ENTREGAR!');
-      return null;
+      return;
     }
     print('REALIZANDO ENTREGA...! ${listaCodBarras.length}');
   }
@@ -144,7 +165,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                             width: 160,
                             child: ElevatedButton(
                               child: const Text('SCANNEAR'),
-                              onPressed: () => _scannear(context),
+                              onPressed: () => readQRCode(context),
                               style: TextButton.styleFrom(
                                 elevation: 10,
                               ),
