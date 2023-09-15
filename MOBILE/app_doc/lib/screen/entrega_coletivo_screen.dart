@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison, unused_element, import_of_legacy_library_into_null_safe, use_build_context_synchronously
+// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison, unused_element, import_of_legacy_library_into_null_safe, use_build_context_synchronously,, avoid_function_literals_in_foreach_calls, unused_local_variable, avoid_init_to_null, prefer_typing_uninitialized_variables
 
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:app_doc/component/circular_progress.dart';
@@ -15,9 +15,36 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   final TextEditingController _numeroController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
-  //late int totalEntrega = 0;
-  final List<String> listaCodBarras = [];
+  int qtdEntrega = 0;
+  late List listaCodBarras = [];
   late String codBarras = '';
+  late String enderecoColetivo = '';
+  Color colorWifi = Colors.white;
+
+  @override
+  initState() {
+    super.initState();
+    getQtdEntregasPendente(context);
+    _getStatusNet(context);
+  }
+
+  void _getStatusNet(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    if (!Utility.isNet) {
+      Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
+    }
+  }
+
+  void _setColorIconWifi(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    setState(() {
+      if (Utility.isNet) {
+        colorWifi = Colors.white;
+      } else {
+        colorWifi = Colors.red[800]!;
+      }
+    });
+  }
 
   Future<void> readQRCode(BuildContext context) async {
     try {
@@ -25,6 +52,8 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         Utility.snackbar(context, 'INFORME O Nº DO ENDERECO ANTES DE SCANNEAR!');
         return null;
       }
+      codBarras = '';
+      enderecoColetivo = '';
       String code = await FlutterBarcodeScanner.scanBarcode(
         '#FF0000',
         'CANCELAR',
@@ -34,7 +63,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
       setState(() {
         codBarras = code != '-1' ? code : '';
       });
-      print('CODE: $code');
       if (code == '-1') return;
       await getEntregasColetivo(context, codBarras);
     } catch (Exc) {
@@ -43,32 +71,89 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     }
   }
 
+  Future<void> getQtdEntregasPendente(BuildContext context) async {
+    try {
+      loading.value = true;
+      await entregaProvider.getQtdEntregasPendente().then((result) => {
+            setState(() {
+              qtdEntrega = result[0]['QTD'];
+            }),
+          });
+      loading.value = false;
+    } catch (Exc) {
+      loading.value = false;
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO BUSCAR QTD PENDENTE: $Exc');
+    }
+  }
+
   Future<void> getEntregasColetivo(BuildContext context, String codBarras) async {
     loading.value = true;
-    // ignore: unused_local_variable
     String endereco = '';
     String charAt = '';
+    int index = 0;
     try {
-      await entregaProvider.getEntregasColetivoPendente(codBarras).then((result) => {
-            if (result.isNotEmpty)
-              {
-                setState(() {
-                  charAt = result[0]['endereco'] ?? '';
-                  for (int i = 0; i < charAt.toString().length; i++) {
-                    if (charAt[i] == '0' || charAt[i] == '1' || charAt[i] == '2' || charAt[i] == '3' || charAt[i] == '4' || charAt[i] == '5' || charAt[i] == '6' || charAt[i] == '7' || charAt[i] == '8' || charAt[i] == '9') {
-                      break;
+      await entregaProvider.getEnderecoColetivoPendente(codBarras).then(
+            (result) => {
+              if (result.isNotEmpty)
+                {
+                  setState(() {
+                    charAt = result[0]['endereco'] ?? '';
+                    for (int i = 0; i < charAt.toString().length; i++) {
+                      if (charAt[i] == '0' || charAt[i] == '1' || charAt[i] == '2' || charAt[i] == '3' || charAt[i] == '4' || charAt[i] == '5' || charAt[i] == '6' || charAt[i] == '7' || charAt[i] == '8' || charAt[i] == '9') {
+                        break;
+                      }
+                      endereco += charAt[i];
                     }
-                    endereco += charAt[i];
-                  }
-                }),
-                //listaCodBarras.add(result[0]['codBarras']),
-              }
-            else
-              {
-                Utility.snackbar(context, 'CODIGO DE BARRAS NAO ENCONTRADO!'),
-              },
-            loading.value = false,
-          });
+                    enderecoColetivo = endereco;
+                  }),
+                }
+              else
+                {
+                  enderecoColetivo = 'ENDERECO INVALIDO!',
+                  Utility.snackbar(context, 'CODIGO DE BARRAS NAO ENCONTRADO!'),
+                },
+              loading.value = false,
+            },
+          );
+      setState(() {
+        listaCodBarras = [];
+      });
+      if (enderecoColetivo.trim() == '') {
+        return;
+      }
+      var entity;
+      List lista = [];
+      await entregaProvider.getEntregasColetivoPendente(enderecoColetivo.trim(), _numeroController.text.trim()).then(
+            (result) => {
+              /*
+              [{id: 7459445, codBarras: 603103484122000027288757, codCliente: 27288757, sequencia: 58900124, roteiro: 4103, 
+              endereco: AV FLORENCIO DE PAIVA 55, cep: 08744-05, municipio: MOGI DAS CRUZES, grupoFaturamento: 1, idGrupoFaturamento: 1, 
+              idImportacao: 1676, observacao:  , pendente: 1}]
+              */
+              if (result.isNotEmpty)
+                {
+                  result.forEach(
+                    (element) => {
+                      entity = {
+                        'codBarras': element['codBarras'],
+                        'endereco': element['endereco'],
+                      },
+                      setState(() {
+                        lista.add(element);
+                      }),
+                    },
+                  ),
+                  setState(() {
+                    lista.retainWhere((endereco) {
+                      return endereco.toString().toLowerCase().contains('${_numeroController.text.trim()}'.toLowerCase());
+                    });
+                    listaCodBarras = lista;
+                    enderecoColetivo += ' - QTD: ${listaCodBarras.length}';
+                  }),
+                }
+            },
+          );
     } catch (Exc) {
       loading.value = false;
       print('$Exc');
@@ -86,9 +171,21 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _setColorIconWifi(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('COLETIVO - QTD: ${listaCodBarras.length}'),
+        title: Text('COLETIVO - QTD: $qtdEntrega'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.wifi,
+              size: 40,
+              color: colorWifi,
+            ),
+            padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
+            onPressed: () => {},
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: loading,
@@ -124,11 +221,23 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                            //labelText: '',
+                            labelText: 'Nº DO ENDERECO',
                             labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
                             hintText: 'Nº DO ENDERECO',
                           ),
                           style: Theme.of(context).textTheme.headline5,
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+                        child: Text(
+                          '$enderecoColetivo',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ],
@@ -184,20 +293,3 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     );
   }
 }
-
-/*
-if (data.rows.length > 0) {
-              entrega.id = data.rows.item(0).id;
-              entrega.idImportacao = data.rows.item(0).idImportacao;
-              entrega.idGrupoFaturamento = data.rows.item(0).idGrupoFaturamento;
-              entrega.grupoFaturamento = data.rows.item(0).grupoFaturamento;
-              entrega.roteiro = data.rows.item(0).roteiro;
-              entrega.endereco = data.rows.item(0).endereco;
-              entrega.cep = data.rows.item(0).cep;
-              entrega.municipio = data.rows.item(0).municipio;
-              entrega.codigo = data.rows.item(0).codigo;
-              entrega.codigoCliente = data.rows.item(0).codigoCliente;
-              entrega.sequencia = data.rows.item(0).sequencia;
-              entrega.observacao = data.rows.item(0).observacao;
-            }
-*/

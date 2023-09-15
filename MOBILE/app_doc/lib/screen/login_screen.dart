@@ -1,7 +1,6 @@
 // ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, non_constant_identifier_names, avoid_print, avoid_unnecessary_containers, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unused_local_variable, avoid_function_literals_in_foreach_calls, prefer_collection_literals, deprecated_member_use, prefer_const_declarations, avoid_init_to_null, missing_return, unused_label, use_build_context_synchronously, avoid_returning_null_for_void, unused_import
 
 import 'dart:convert';
-
 import 'package:app_doc/provider/user_provider.dart';
 import 'package:flutter/material.dart';
 import '../component/circular_progress.dart';
@@ -21,17 +20,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final loading = ValueNotifier<bool>(false);
   final userProvider = UserProvider();
   final List<User> listaUser = [];
-  final indexMsg = {'value': 0};
+  Color colorWifi = Colors.white;
 
   @override
   initState() {
     super.initState();
-    deleteUsuarioAll();
     getUserApi(context);
+    _getStatusNet(context);
   }
 
-  Future<void> deleteUsuarioAll() async {
-    await userProvider.deleteAll('usuario');
+  void _getStatusNet(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    if (!Utility.isNet) {
+      Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
+    }
+  }
+
+  void _setColorIconWifi(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    setState(() {
+      if (Utility.isNet) {
+        colorWifi = Colors.white;
+      } else {
+        colorWifi = Colors.red[800]!;
+      }
+    });
   }
 
   Future<void> getUsuario(String login, String senha) async {
@@ -66,9 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_loginController.text.isEmpty || _loginController.text.trim() == '' || _senhaController.text.isEmpty || _senhaController.text.trim() == '') {
       return;
     }
-    setState(() {
-      loading.value = true;
-    });
     await getUsuario(_loginController.text, _senhaController.text);
     bool isUser = false;
     User user = User();
@@ -95,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       try {
+        await userProvider.deleteAll('usuario');
         loading.value = true;
         User user;
         final future = userProvider.getUser();
@@ -132,22 +143,26 @@ class _LoginScreenState extends State<LoginScreen> {
         print('$Exc');
         Utility.snackbar(context, 'ERRO DE DOWNLOAD DE USUARIO: $Exc');
       }
-    } else {
-      /*if (indexMsg['values'] == 0) {
-        setState(() {
-          indexMsg['value'] = 1;
-        });
-        Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
-      }*/
-      Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _setColorIconWifi(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('LOGIN'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.wifi,
+              size: 40,
+              color: colorWifi,
+            ),
+            padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
+            onPressed: () => getUserApi(context),
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: loading,
@@ -226,7 +241,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  //   Divider(),
                   InfoApp(User()),
                 ],
               ),

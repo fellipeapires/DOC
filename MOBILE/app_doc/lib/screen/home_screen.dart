@@ -20,6 +20,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
+  Color colorWifi = Colors.white;
+
+  void _checkInternet(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    setState(() {
+      if (Utility.isNet) {
+        colorWifi = Colors.white;
+      } else {
+        colorWifi = Colors.red[800]!;
+      }
+    });
+  }
 
   void _setPage(BuildContext context, String appRoute, Object argumets) {
     Utility.setAppRouter(context, appRoute, argumets);
@@ -83,11 +95,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _checkInternet(context);
     final user = ModalRoute.of(context)?.settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: const Text('HOME'),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.wifi,
+              size: 40,
+              color: colorWifi,
+            ),
+            padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
+            onPressed: () => {},
+          ),
           IconButton(
             icon: const Icon(
               Icons.download_sharp,
