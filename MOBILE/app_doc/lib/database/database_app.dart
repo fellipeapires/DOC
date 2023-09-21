@@ -13,11 +13,11 @@ class DatabaseApp {
         db.execute(
             'CREATE TABLE IF NOT EXISTS entrega(id integer primary key NOT NULL, codBarras TEXT, codCliente TEXT, sequencia TEXT, roteiro TEXT, endereco TEXT, cep TEXT, municipio TEXT, grupoFaturamento integer, idGrupoFaturamento integer, idImportacao integer, observacao TEXT, pendente integer)');
         db.execute(
-            'CREATE TABLE IF NOT EXISTS retorno_entrega(id integer primary key AUTOINCREMENT NOT NULL, idEntrega integer, idImportacao integer, grupoFaturamento integer, roteiro TEXT, id_usuario integer, id_ocorrencia integer, dataExecucao DATE, observacao TEXT, medidor TEXT, instalacao TEXT, cod_barrasQr TEXT, codigo TEXT, latitude TEXT, longitude TEXT, altitude TEXT, assinatura integer, pendente integer, predio integer, versaoApp TEXT)');
+            'CREATE TABLE IF NOT EXISTS retorno_entrega(id integer primary key AUTOINCREMENT NOT NULL, idEntrega integer, idImportacao integer, grupoFaturamento integer, roteiro TEXT, idUsuario integer, idOcorrencia integer, dataExecucao DATE, observacao TEXT, medidor TEXT, instalacao TEXT, codBarras TEXT, codCliente TEXT, latitude TEXT, longitude TEXT, altitude TEXT, assinatura integer, pendente integer, predio integer, versaoApp TEXT)');
         db.execute('CREATE TABLE IF NOT EXISTS ocorrencia(id integer primary key NOT NULL, codigo integer, nome TEXT, situacao integer, tipo integer, situacaofoto integer, qtminimafoto integer, dataAtualizacao)');
         db.execute('CREATE TABLE IF NOT EXISTS retorno_foto(id integer primary key AUTOINCREMENT NOT NULL, id_usuario integer, nome TEXT, dataExecucao DATE, cod_barrasQr TEXT, instalacao TEXT, imagem TEXT, pendente integer, assinatura integer)');
         db.execute('CREATE INDEX IF NOT EXISTS index_entrega ON entrega (codBarras, roteiro, cep, idGrupoFaturamento, grupoFaturamento, pendente)');
-        return db.execute('CREATE INDEX IF NOT EXISTS index_retorno_entrega ON retorno_entrega (roteiro, cod_barrasQr, grupoFaturamento, pendente)');
+        return db.execute('CREATE INDEX IF NOT EXISTS index_retorno_entrega ON retorno_entrega (roteiro, codBarras, grupoFaturamento, pendente)');
       },
       version: 1,
     );

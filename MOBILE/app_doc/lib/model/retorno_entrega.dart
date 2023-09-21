@@ -1,4 +1,5 @@
 class RetornoEntrega {
+  int? id;
   int? idImportacao;
   int? idEntrega;
   int? idUsuario;
@@ -21,6 +22,7 @@ class RetornoEntrega {
   List<int>? listaIdEntrega;
 
   RetornoEntrega({
+    this.id,
     this.idImportacao,
     this.idEntrega,
     this.idUsuario,
