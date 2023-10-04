@@ -1,25 +1,25 @@
 class RetornoEntrega {
-  int? id;
-  int? idImportacao;
-  int? idEntrega;
-  int? idUsuario;
-  int? idOcorrencia;
-  String? dataExecucao;
-  String? codBarras;
-  String? codigo;
-  String? latitude;
-  String? longitude;
-  String? observacao;
-  String? instalacao;
-  String? medidor;
-  int? assinatura;
-  int? pendente;
-  String? imei;
-  int? grupoFaturamento;
-  String? roteiro;
-  int? predio;
-  String? versaoApp;
-  List<int>? listaIdEntrega;
+  int id;
+  int idImportacao;
+  int idEntrega;
+  int idUsuario;
+  int idOcorrencia;
+  String dataExecucao;
+  String codBarras;
+  String codigo;
+  String latitude;
+  String longitude;
+  String observacao;
+  String instalacao;
+  String medidor;
+  int assinatura;
+  int pendente;
+  String imei;
+  int grupoFaturamento;
+  String roteiro;
+  int predio;
+  String versaoApp;
+  List<int> listaIdEntrega;
 
   RetornoEntrega({
     this.id,

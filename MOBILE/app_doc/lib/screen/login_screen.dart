@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (Utility.isNet) {
         colorWifi = Colors.white;
       } else {
-        colorWifi = Colors.red[800]!;
+        colorWifi = Colors.red[800];
       }
     });
   }
@@ -114,14 +114,14 @@ class _LoginScreenState extends State<LoginScreen> {
             jsonDecode(response.body).forEach(
               (element) => {
                 user = User(),
-                user.id = int.tryParse(element['id'].toString())!,
-                user.idRegional = int.tryParse(element['idRegional'].toString())!,
+                user.id = int.tryParse(element['id'].toString()),
+                user.idRegional = int.tryParse(element['idRegional'].toString()),
                 user.regional = element['regional'],
                 user.nome = element['nome'],
                 user.login = element['login'],
                 user.senha = element['matricula'],
                 user.matricula = element['matricula'],
-                user.situacao = int.tryParse(element['ativo'].toString())!,
+                user.situacao = int.tryParse(element['ativo'].toString()),
                 userProvider.insert(
                   {
                     'id': user.id,

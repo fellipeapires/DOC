@@ -1,12 +1,24 @@
-// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison, unused_element, import_of_legacy_library_into_null_safe, use_build_context_synchronously,, avoid_function_literals_in_foreach_calls, unused_local_variable, avoid_init_to_null, prefer_typing_uninitialized_variables, unnecessary_brace_in_string_interps
+// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, prefer_const_literals_to_create_immutables, avoid_print, non_constant_identifier_names, sort_child_properties_last, avoid_returning_null_for_void, unnecessary_null_comparison, unused_element, import_of_legacy_library_into_null_safe, use_build_context_synchronously,, avoid_function_literals_in_foreach_calls, unused_local_variable, avoid_init_to_null, prefer_typing_uninitialized_variables, unnecessary_brace_in_string_interps, await_only_futures
+
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:app_doc/model/retorno_entrega.dart';
+import 'package:app_doc/model/retorno_foto.dart';
 import 'package:app_doc/model/user.dart';
+import 'package:app_doc/provider/foto_provider.dart';
+import 'package:app_doc/screen/preview_screen.dart';
+import 'package:app_doc/widgets/anexo.dart';
+import 'package:camera_camera/camera_camera.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
 import 'package:app_doc/util/utility.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 class EntregaColetivoScreen extends StatefulWidget {
   @override
@@ -17,17 +29,57 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   final TextEditingController _numeroController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
+  final fotoProvider = FotoProvider();
   int qtdEntrega = 0;
-  late List listaCodBarras = [];
-  late String codBarras = '';
-  late String enderecoColetivo = '';
+  List listaCodBarras = [];
+  String codBarras = '';
+  String enderecoColetivo = '';
   Color colorWifi = Colors.white;
+  File arquivo;
+  String versaoApp = Utility.getDadosApp().values.elementAt(5);
+  //String latitude;
+  //String longitude;
 
   @override
   initState() {
     super.initState();
     getQtdEntregasPendente(context);
     _getStatusNet(context);
+    _determinePosition();
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Os serviços de localização estão desativados!');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('As permissões de localização são negadas permanentemente, não podemos solicitar permissões!');
+    }
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) {
+        return Future.error('As permissões de localização são negadas (valor real: $permission).');
+      }
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  showPreview(File file) async {
+    file = await Get.to(() => PreviewScreen(file: file));
+    if (file != null) {
+      setState(() {
+        arquivo = file;
+        Get.back();
+      });
+    }
   }
 
   void _getStatusNet(BuildContext context) async {
@@ -43,7 +95,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
       if (Utility.isNet) {
         colorWifi = Colors.white;
       } else {
-        colorWifi = Colors.red[800]!;
+        colorWifi = Colors.red[800];
       }
     });
   }
@@ -168,19 +220,47 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     }
     try {
       loading.value = true;
+      if (arquivo != null) {
+        File imagem = File(arquivo.path);
+        Uint8List imagebytes = await imagem.readAsBytes();
+//DateFormat("y-MM-d HH:mm:ss").format(DateTime.now())
+        var foto = RetornoFoto();
+        foto.codBarras = codBarras;
+        foto.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now());
+        foto.instalacao = '';
+        foto.nome = '${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
+        foto.imagem = base64.encode(imagebytes);
+        foto.pendente = 1;
+        foto.assinatura = 0;
+
+        fotoProvider.insert(
+          {
+            'idUsuario': user.id,
+            'codBarras': foto.codBarras,
+            'dataExecucao': foto.dataExecucao,
+            'instalacao': foto.instalacao,
+            'nome': foto.nome,
+            'imagem': foto.imagem,
+            'pendente': foto.pendente,
+            'assinatura': foto.assinatura,
+          },
+        );
+      }
+
+      Position position = await _determinePosition();
       RetornoEntrega retornoRest = RetornoEntrega();
       retornoRest.listaIdEntrega = [];
       List<String> listaFaturasEntregues = [];
       listaCodBarras.forEach((element) => {
-            retornoRest.listaIdEntrega!.add(int.tryParse(element['id'].toString())!),
+            retornoRest.listaIdEntrega.add(int.tryParse(element['id'].toString())),
             listaFaturasEntregues.add(element['codBarras']),
             entregaProvider.insertRetornoEntrega(
               {
-                'idImportacao': int.tryParse(element['idImportacao'].toString())!,
-                'idEntrega': int.tryParse(element['id'].toString())!,
+                'idImportacao': int.tryParse(element['idImportacao'].toString()),
+                'idEntrega': int.tryParse(element['id'].toString()),
                 'idUsuario': int.tryParse(user.id.toString()),
                 'idOcorrencia': 1,
-                'grupoFaturamento': int.tryParse(element['grupoFaturamento'].toString())!,
+                'grupoFaturamento': int.tryParse(element['grupoFaturamento'].toString()),
                 'dataExecucao': null,
                 'roteiro': element['roteiro'],
                 'instalacao': null,
@@ -189,20 +269,20 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                 'codCliente': element['codCliente'],
                 'observacao': element['observacao'],
                 'altitude': '0',
-                'latitude': '0',
-                'longitude': '0',
+                'latitude': position.latitude.toString(),
+                'longitude': position.longitude.toString(),
                 'assinatura': 1,
                 'predio': 1,
                 'pendente': 1,
-                'versaoApp': ''
+                'versaoApp': versaoApp,
               },
             )
           });
+      arquivo = null;
       if (listaFaturasEntregues.isNotEmpty) {
         listaFaturasEntregues.forEach((element) async => {
               await entregaProvider.getListaRetornoEntrega(element).then(
                     (result) => {
-                      print('$result'),
                       if (result.isNotEmpty)
                         {
                           result.forEach(
@@ -224,11 +304,23 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   @override
   Widget build(BuildContext context) {
     _setColorIconWifi(context);
-    final user = ModalRoute.of(context)?.settings.arguments as User;
+    final user = ModalRoute.of(context).settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: Text('COLETIVO - QTD: $qtdEntrega'),
         actions: [
+          IconButton(
+            icon: Icon(
+              Icons.camera_alt_sharp,
+              size: 40,
+              color: colorWifi,
+            ),
+            padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
+            onPressed: () => Get.to(
+              () => CameraCamera(onFile: (file) => showPreview(file)),
+            ),
+            // onPressed: () => openCamera(context),
+          ),
           IconButton(
             icon: Icon(
               Icons.wifi,
@@ -292,6 +384,13 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(5),
+                        child: arquivo != null ? Anexo(arquivo: arquivo) : const Text(''),
                       ),
                     ],
                   ),

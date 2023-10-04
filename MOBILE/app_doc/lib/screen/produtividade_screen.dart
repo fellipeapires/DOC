@@ -8,7 +8,7 @@ import '../model/user.dart';
 class ProdutividadeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final user = ModalRoute.of(context)?.settings.arguments as User;
+    final user = ModalRoute.of(context).settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: const Text('PRODUTIVIDADE'),

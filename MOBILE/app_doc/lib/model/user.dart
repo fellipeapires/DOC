@@ -1,12 +1,12 @@
 class User {
-  int? id;
-  int? idRegional;
-  String? regional;
-  String? nome;
-  String? login;
-  String? senha;
-  String? matricula;
-  int? situacao;
+  int id;
+  int idRegional;
+  String regional;
+  String nome;
+  String login;
+  String senha;
+  String matricula;
+  int situacao;
 
   User({
     this.id,

@@ -15,14 +15,14 @@ class EstatisticaScreen extends StatefulWidget {
 class _EstatisticaScreenState extends State<EstatisticaScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
-  late int totalEntrega = 0;
-  late int totalLido = 0;
-  late int pendenteEnvioEntrega = 0;
-  late int enviadoEntrega = 0;
-  late int totalFoto = 0;
-  late int pendenteEnvioFoto = 0;
-  late int enviadoFoto = 0;
-  late int ocorrencia = 0;
+  int totalEntrega = 0;
+  int totalLido = 0;
+  int pendenteEnvioEntrega = 0;
+  int enviadoEntrega = 0;
+  int totalFoto = 0;
+  int pendenteEnvioFoto = 0;
+  int enviadoFoto = 0;
+  int ocorrencia = 0;
   final ButtonStyle styleOcorrencia = ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900), backgroundColor: Colors.red);
   final ButtonStyle styleFoto = ElevatedButton.styleFrom(textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900), backgroundColor: Colors.blueGrey[400]);
 
@@ -38,14 +38,14 @@ class _EstatisticaScreenState extends State<EstatisticaScreen> {
           (result) => {
             setState(
               () {
-                totalEntrega = result[0]['TOTAL'] != null ? int.tryParse(result[0]['TOTAL'].toString())! : 0;
-                totalLido = result[0]['LIDO'] != null ? int.tryParse(result[0]['LIDO'].toString())! : 0;
-                pendenteEnvioEntrega = result[0]['PENDENTE_ENVIO'] != null ? int.tryParse(result[0]['PENDENTE_ENVIO'].toString())! : 0;
-                enviadoEntrega = result[0]['ENVIADO'] != null ? int.tryParse(result[0]['ENVIADO'].toString())! : 0;
-                totalFoto = int.tryParse(result[0]['FOTOS_TOTAL'].toString())!;
-                pendenteEnvioFoto = int.tryParse(result[0]['FOTOS_PENDENTES'].toString())!;
-                enviadoFoto = int.tryParse(result[0]['FOTOS_ENVIADA'].toString())!;
-                ocorrencia = result[0]['OCORRENCIA'] != null ? int.tryParse(result[0]['OCORRENCIA'].toString())! : 0;
+                totalEntrega = result[0]['TOTAL'] != null ? int.tryParse(result[0]['TOTAL'].toString()) : 0;
+                totalLido = result[0]['LIDO'] != null ? int.tryParse(result[0]['LIDO'].toString()) : 0;
+                pendenteEnvioEntrega = result[0]['PENDENTE_ENVIO'] != null ? int.tryParse(result[0]['PENDENTE_ENVIO'].toString()) : 0;
+                enviadoEntrega = result[0]['ENVIADO'] != null ? int.tryParse(result[0]['ENVIADO'].toString()) : 0;
+                totalFoto = int.tryParse(result[0]['FOTOS_TOTAL'].toString());
+                pendenteEnvioFoto = int.tryParse(result[0]['FOTOS_PENDENTES'].toString());
+                enviadoFoto = int.tryParse(result[0]['FOTOS_ENVIADA'].toString());
+                ocorrencia = result[0]['OCORRENCIA'] != null ? int.tryParse(result[0]['OCORRENCIA'].toString()) : 0;
               },
             ),
             loading.value = false,
@@ -55,7 +55,7 @@ class _EstatisticaScreenState extends State<EstatisticaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ModalRoute.of(context)?.settings.arguments as User;
+    final user = ModalRoute.of(context).settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: const Text('ESTATISTICA'),

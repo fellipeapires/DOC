@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (Utility.isNet) {
         colorWifi = Colors.white;
       } else {
-        colorWifi = Colors.red[800]!;
+        colorWifi = Colors.red[800];
       }
     });
   }
@@ -49,10 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
             jsonDecode(response.body).forEach(
               (element) => {
                 entrega = Entrega(),
-                entrega.id = int.tryParse(element['idEntrega'].toString())!,
-                entrega.idImportacao = int.tryParse(element['idImportacao'].toString())!,
-                entrega.idGrupoFaturamento = int.tryParse(element['idGrupoFaturamento'].toString())!,
-                entrega.grupoFaturamento = int.tryParse(element['grupoFaturamento'].toString())!,
+                entrega.id = int.tryParse(element['idEntrega'].toString()),
+                entrega.idImportacao = int.tryParse(element['idImportacao'].toString()),
+                entrega.idGrupoFaturamento = int.tryParse(element['idGrupoFaturamento'].toString()),
+                entrega.grupoFaturamento = int.tryParse(element['grupoFaturamento'].toString()),
                 entrega.roteiro = element['roteiro'],
                 entrega.sequencia = element['sequencia'],
                 entrega.municipio = element['municipio'],
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     _checkInternet(context);
-    final user = ModalRoute.of(context)?.settings.arguments as User;
+    final user = ModalRoute.of(context).settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: const Text('HOME'),
@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 40,
             ),
             padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
-            onPressed: () => getCargaEntrega(context, user.id!),
+            onPressed: () => getCargaEntrega(context, user.id),
           ),
         ],
       ),
