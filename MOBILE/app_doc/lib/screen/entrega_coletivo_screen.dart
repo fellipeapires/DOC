@@ -37,8 +37,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   Color colorWifi = Colors.white;
   File arquivo;
   String versaoApp = Utility.getDadosApp().values.elementAt(5);
-  //String latitude;
-  //String longitude;
 
   @override
   initState() {
@@ -80,6 +78,12 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         Get.back();
       });
     }
+  }
+
+  removePhoto() {
+    setState(() {
+      arquivo = null;
+    });
   }
 
   void _getStatusNet(BuildContext context) async {
@@ -223,16 +227,15 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
       if (arquivo != null) {
         File imagem = File(arquivo.path);
         Uint8List imagebytes = await imagem.readAsBytes();
-//DateFormat("y-MM-d HH:mm:ss").format(DateTime.now())
+        //DateFormat("y-MM-d HH:mm:ss").format(DateTime.now())
         var foto = RetornoFoto();
         foto.codBarras = codBarras;
         foto.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now());
         foto.instalacao = '';
-        foto.nome = '${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
+        foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
         foto.imagem = base64.encode(imagebytes);
         foto.pendente = 1;
         foto.assinatura = 0;
-
         fotoProvider.insert(
           {
             'idUsuario': user.id,
@@ -246,13 +249,23 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
           },
         );
       }
-
       Position position = await _determinePosition();
       RetornoEntrega retornoRest = RetornoEntrega();
       retornoRest.listaIdEntrega = [];
       List<String> listaFaturasEntregues = [];
       listaCodBarras.forEach((element) => {
             retornoRest.listaIdEntrega.add(int.tryParse(element['id'].toString())),
+            retornoRest.idEntrega = int.tryParse(element['id'].toString()),
+            retornoRest.idUsuario = user.id,
+            retornoRest.idOcorrencia = 1,
+            retornoRest.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now()),
+            retornoRest.latitude = position.latitude.toString(),
+            retornoRest.longitude = position.longitude.toString(),
+            retornoRest.imei = '',
+            retornoRest.observacao = '',
+            retornoRest.assinatura = 0,
+            retornoRest.matricula = '',
+            retornoRest.versaoApp = versaoApp,
             listaFaturasEntregues.add(element['codBarras']),
             entregaProvider.insertRetornoEntrega(
               {
@@ -261,17 +274,19 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                 'idUsuario': int.tryParse(user.id.toString()),
                 'idOcorrencia': 1,
                 'grupoFaturamento': int.tryParse(element['grupoFaturamento'].toString()),
-                'dataExecucao': null,
+                'dataExecucao': retornoRest.dataExecucao,
                 'roteiro': element['roteiro'],
                 'instalacao': null,
                 'medidor': null,
+                'matricula': retornoRest.matricula,
                 'codBarras': element['codBarras'],
                 'codCliente': element['codCliente'],
-                'observacao': element['observacao'],
+                'imei': retornoRest.imei,
+                'observacao': retornoRest.observacao,
                 'altitude': '0',
                 'latitude': position.latitude.toString(),
                 'longitude': position.longitude.toString(),
-                'assinatura': 1,
+                'assinatura': retornoRest.assinatura,
                 'predio': 1,
                 'pendente': 1,
                 'versaoApp': versaoApp,
@@ -288,7 +303,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                           result.forEach(
                             (element) => {entregaProvider.setFaturaEntregue(element['codBarras'])},
                           ),
-                          getQtdEntregasPendente(context),
+                          sincronizarRetornoColetivo(context, retornoRest),
                         }
                     },
                   ),
@@ -301,6 +316,33 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     }
   }
 
+  Future<void> sincronizarRetornoColetivo(BuildContext context, RetornoEntrega retornoEntrega) async {
+    await Utility.getStatusNet(context);
+    if (Utility.isNet) {
+      try {
+        loading.value = true;
+        List<RetornoEntrega> listaRetorno = [];
+        listaRetorno.add(retornoEntrega);
+        final future = entregaProvider.sincronizarRetorno(listaRetorno);
+        future.then(
+          (response) => {
+            jsonDecode(response.body).forEach(
+              (idEntrega) => {
+                entregaProvider.marcarRetornoEnviadoPorIdEntrega(idEntrega),
+              },
+            ),
+            getQtdEntregasPendente(context),
+            //loading.value = false,
+          },
+        );
+      } catch (Exc) {
+        loading.value = false;
+        print('$Exc');
+        Utility.snackbar(context, 'ERRO SINCRONIZAR ENTREGA: $Exc');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _setColorIconWifi(context);
@@ -310,10 +352,10 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         title: Text('COLETIVO - QTD: $qtdEntrega'),
         actions: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.camera_alt_sharp,
               size: 40,
-              color: colorWifi,
+              color: Colors.white,
             ),
             padding: const EdgeInsets.fromLTRB(1, 1, 25, 1),
             onPressed: () => Get.to(
@@ -392,6 +434,26 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                         padding: const EdgeInsets.all(5),
                         child: arquivo != null ? Anexo(arquivo: arquivo) : const Text(''),
                       ),
+                      arquivo != null
+                          ? Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.all(0),
+                                child: CircleAvatar(
+                                  radius: 32,
+                                  backgroundColor: Colors.black.withOpacity(0.5),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                                    onPressed: () => removePhoto(),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const Text(''),
                     ],
                   ),
                 ),

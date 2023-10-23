@@ -1,7 +1,11 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, prefer_interpolation_to_compose_strings
+
+import 'dart:convert';
 
 import 'package:app_doc/database/database_app.dart';
+import 'package:app_doc/model/retorno_entrega.dart';
 import 'package:app_doc/provider/api_url_provider.dart';
+import 'package:app_doc/util/utility.dart';
 import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart' as path;
@@ -12,6 +16,17 @@ class EntregaProvider {
   Future getCargaAPI(int idUsuario) {
     return http.get(
       Uri.parse('$_apiUrl/distribuicao/carregarentregamobile/$idUsuario'),
+    );
+  }
+
+  Future<http.Response> marcarEntregaAssociadaAPI(List<int> listaIdEntrega) async {
+    String url = '$_apiUrl/distribuicao/atualizarassociadomobile';
+    Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+    String strBody = jsonEncode(listaIdEntrega.toList()).toString();
+    return await http.put(
+      Uri.parse(url),
+      headers: headers,
+      body: strBody,
     );
   }
 
@@ -40,9 +55,47 @@ class EntregaProvider {
     return db.rawQuery('SELECT COUNT(*) AS QTD FROM entrega WHERE pendente = 1');
   }
 
+  Future<List<Map<String, dynamic>>> getEntregasAssociadas(String queryIdEntrega) async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawQuery('SELECT id FROM entrega WHERE id in(' + queryIdEntrega + ')');
+  }
+
   Future<int> setFaturaEntregue(String codBarras) async {
     final db = await DatabaseApp.dataBase();
     return db.rawUpdate('UPDATE entrega SET pendente = 0 WHERE codBarras = ?', [codBarras]);
+  }
+
+  Future<http.Response> sincronizarRetorno(List<RetornoEntrega> listaRetorno) async {
+    String url = '$_apiUrl/retornoentregas/incluirmobile';
+    Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+    String strBody = jsonEncode(listaRetorno.map((e) => e.toJson()).toList()).toString();
+    return await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: strBody,
+    );
+  }
+
+  Future<http.Response> sincronizarRetornoColetivo(List<RetornoEntrega> listaRetorno) async {
+    String url = '$_apiUrl/retornoentregas/incluirmobilecoletivo';
+    Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+    String strBody = jsonEncode(listaRetorno.map((e) => e.toJson()).toList()).toString();
+    return await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: strBody,
+    );
+  }
+
+  Future<http.Response> alterarAssociadoMobileAPI(Object distribuicaoDto) async {
+    String url = '$_apiUrl/distribuicao/atualizarassociadomobile';
+    Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+    String strBody = jsonEncode(distribuicaoDto).toString();
+    return await http.put(
+      Uri.parse(url),
+      headers: headers,
+      body: strBody,
+    );
   }
 
   Future<void> insertRetornoEntrega(Map<String, dynamic> data) async {
@@ -52,5 +105,15 @@ class EntregaProvider {
   Future<List<Map<String, dynamic>>> getListaRetornoEntrega(String codBarras) async {
     final db = await DatabaseApp.dataBase();
     return db.query('retorno_entrega', where: 'codBarras = ?', whereArgs: [codBarras]);
+  }
+
+  Future<List<Map<String, dynamic>>> getListaRetornoEntregaPendenteSinc() async {
+    final db = await DatabaseApp.dataBase();
+    return db.query('retorno_entrega', where: 'pendente = 1 ');
+  }
+
+  Future<void> marcarRetornoEnviadoPorIdEntrega(int idEntrega) async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawUpdate('UPDATE retorno_entrega SET pendente = 0 WHERE idEntrega = ?', [idEntrega]);
   }
 }
