@@ -55,9 +55,9 @@ class EntregaProvider {
     return db.rawQuery('SELECT COUNT(*) AS QTD FROM entrega WHERE pendente = 1');
   }
 
-  Future<List<Map<String, dynamic>>> getEntregasAssociadas(String queryIdEntrega) async {
+  Future<List<Map<String, dynamic>>> getListaIdEntrega(String arrayIdEntrega) async {
     final db = await DatabaseApp.dataBase();
-    return db.rawQuery('SELECT id FROM entrega WHERE id in(' + queryIdEntrega + ')');
+    return db.rawQuery('SELECT id FROM entrega WHERE id in(' + arrayIdEntrega + ')');
   }
 
   Future<int> setFaturaEntregue(String codBarras) async {
@@ -92,6 +92,28 @@ class EntregaProvider {
     Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
     String strBody = jsonEncode(distribuicaoDto).toString();
     return await http.put(
+      Uri.parse(url),
+      headers: headers,
+      body: strBody,
+    );
+  }
+
+  Future getDesassociadosAPI(int idUsuario) {
+    return http.get(
+      Uri.parse('$_apiUrl/distribuicao/lista-identrega-mobile/$idUsuario'),
+    );
+  }
+
+  Future<void> desassociar(String arrayIdEntrega) async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawQuery('Delete from entrega where pendente = 1 and id in(' + arrayIdEntrega + ')');
+  }
+
+  Future<http.Response> limparDesassociadoAPI(Object distribuicaoDto) async {
+    String url = '$_apiUrl/distribuicao/limpar-desassociado';
+    Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+    String strBody = jsonEncode(distribuicaoDto).toString();
+    return await http.post(
       Uri.parse(url),
       headers: headers,
       body: strBody,

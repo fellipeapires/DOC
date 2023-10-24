@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
   Color colorWifi = Colors.white;
+  int contador = 0;
 
   void _checkInternet(BuildContext context) async {
     await Utility.getStatusNet(context);
@@ -117,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       var distribuicaoDto = {};
       var lista = [];
-      final future = entregaProvider.getEntregasAssociadas(queryIdEntrega);
+      final future = entregaProvider.getListaIdEntrega(queryIdEntrega);
       future.then(
         (result) async => {
           result.forEach((element) {
@@ -185,7 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       try {
-        //loading.value = true;
         final future = entregaProvider.sincronizarRetorno(listaRetorno);
         future.then(
           (response) => {
@@ -207,10 +207,61 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _desassociar(BuildContext context, int idUsuario) async {
+    if (contador == 0) {
+      await Utility.getStatusNet(context);
+      if (Utility.isNet) {
+        try {
+          setState(() {
+            contador++;
+          });
+          loading.value = true;
+          String arrayIdEntrega = '';
+          int index = 0;
+          var distribuicaoDto = {};
+          var lista = [];
+          final future = entregaProvider.getDesassociadosAPI(idUsuario);
+          future.then(
+            (response) async => {
+              jsonDecode(response.body),
+              lista = jsonDecode(response.body),
+              print('$lista'),
+              if (lista.isNotEmpty)
+                {
+                  lista.forEach((idEntrega) async {
+                    if (index > 0 && index < lista.length) {
+                      arrayIdEntrega += ',${idEntrega}';
+                    } else {
+                      arrayIdEntrega += idEntrega.toString();
+                    }
+                    index++;
+                  }),
+                  await entregaProvider.desassociar(arrayIdEntrega),
+                  distribuicaoDto = {
+                    'idUsuario': idUsuario,
+                    'listaIdEntrega': lista,
+                  },
+                  await entregaProvider.limparDesassociadoAPI(distribuicaoDto),
+                },
+              loading.value = false,
+            },
+          );
+        } catch (Exc) {
+          loading.value = false;
+          print('$Exc');
+          Utility.snackbar(context, 'ERRO AO DESASSOCIAR: $Exc');
+        }
+      } else {
+        Utility.snackbar(context, 'SEM CONEXAO DE INTERNET PARA DESASSOCIAR');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    _checkInternet(context);
     final user = ModalRoute.of(context).settings.arguments as User;
+    _checkInternet(context);
+    _desassociar(context, user.id);
     return Scaffold(
       appBar: AppBar(
         title: const Text('HOME'),
