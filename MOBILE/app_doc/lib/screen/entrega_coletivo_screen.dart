@@ -233,7 +233,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         foto.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now());
         foto.instalacao = '';
         foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
-        foto.imagem = base64.encode(imagebytes);
+        foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
         foto.pendente = 1;
         foto.assinatura = 0;
         fotoProvider.insert(
@@ -332,7 +332,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
               },
             ),
             getQtdEntregasPendente(context),
-            //loading.value = false,
           },
         );
       } catch (Exc) {
@@ -340,6 +339,9 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         print('$Exc');
         Utility.snackbar(context, 'ERRO SINCRONIZAR ENTREGA: $Exc');
       }
+    } else {
+      getQtdEntregasPendente(context);
+      //loading.value = false;
     }
   }
 

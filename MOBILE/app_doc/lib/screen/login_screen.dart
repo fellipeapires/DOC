@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, non_constant_identifier_names, avoid_print, avoid_unnecessary_containers, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unused_local_variable, avoid_function_literals_in_foreach_calls, prefer_collection_literals, deprecated_member_use, prefer_const_declarations, avoid_init_to_null, missing_return, unused_label, use_build_context_synchronously, avoid_returning_null_for_void, unused_import
+// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, non_constant_identifier_names, avoid_print, avoid_unnecessary_containers, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unused_local_variable, avoid_function_literals_in_foreach_calls, prefer_collection_literals, deprecated_member_use, prefer_const_declarations, avoid_init_to_null, missing_return, unused_label, use_build_context_synchronously, avoid_returning_null_for_void, unused_import, unnecessary_this
 
 import 'dart:convert';
 import 'package:app_doc/provider/user_provider.dart';
@@ -21,31 +21,43 @@ class _LoginScreenState extends State<LoginScreen> {
   final userProvider = UserProvider();
   final List<User> listaUser = [];
   Color colorWifi = Colors.white;
+  int contadorMsgNet = 0;
 
   @override
   initState() {
     super.initState();
     getUserApi(context);
-    _getStatusNet(context);
   }
 
   void _getStatusNet(BuildContext context) async {
     await Utility.getStatusNet(context);
     if (!Utility.isNet) {
-      Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
-    }
-  }
-
-  void _setColorIconWifi(BuildContext context) async {
-    await Utility.getStatusNet(context);
-    setState(() {
-      if (Utility.isNet) {
-        colorWifi = Colors.white;
-      } else {
+      setState(() {
         colorWifi = Colors.red[800];
+      });
+      if (this.contadorMsgNet == 0) {
+        Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
       }
+    } else {
+      setState(() {
+        colorWifi = Colors.white;
+      });
+    }
+    setState(() {
+      this.contadorMsgNet++;
     });
   }
+
+  // void _setColorIconWifi(BuildContext context) async {
+  //   await Utility.getStatusNet(context);
+  //   setState(() {
+  //     if (Utility.isNet) {
+  //       colorWifi = Colors.white;
+  //     } else {
+  //       colorWifi = Colors.red[800];
+  //     }
+  //   });
+  // }
 
   Future<void> getUsuario(String login, String senha) async {
     var user = null;
@@ -148,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _setColorIconWifi(context);
+    _getStatusNet(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('LOGIN'),

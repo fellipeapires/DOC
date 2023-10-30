@@ -203,18 +203,19 @@ class _HomeScreenState extends State<HomeScreen> {
         Utility.snackbar(context, 'ERRO SINCRONIZAR ENTREGA: $Exc');
       }
     } else {
+      loading.value = false;
       Utility.snackbar(context, 'SEM CONEXAO DE INTERNET PARA SINCRONIZAR');
     }
   }
 
   Future<void> _desassociar(BuildContext context, int idUsuario) async {
-    if (contador == 0) {
+    if (this.contador == 0) {
+      setState(() {
+        this.contador++;
+      });
       await Utility.getStatusNet(context);
       if (Utility.isNet) {
         try {
-          setState(() {
-            contador++;
-          });
           loading.value = true;
           String arrayIdEntrega = '';
           int index = 0;
@@ -225,7 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
             (response) async => {
               jsonDecode(response.body),
               lista = jsonDecode(response.body),
-              print('$lista'),
               if (lista.isNotEmpty)
                 {
                   lista.forEach((idEntrega) async {
@@ -252,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Utility.snackbar(context, 'ERRO AO DESASSOCIAR: $Exc');
         }
       } else {
+        loading.value = false;
         Utility.snackbar(context, 'SEM CONEXAO DE INTERNET PARA DESASSOCIAR');
       }
     }
