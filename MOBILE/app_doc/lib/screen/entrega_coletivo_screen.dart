@@ -8,6 +8,7 @@ import 'package:app_doc/model/retorno_entrega.dart';
 import 'package:app_doc/model/retorno_foto.dart';
 import 'package:app_doc/model/user.dart';
 import 'package:app_doc/provider/foto_provider.dart';
+import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:app_doc/screen/preview_screen.dart';
 import 'package:app_doc/widgets/anexo.dart';
 import 'package:camera_camera/camera_camera.dart';
@@ -27,9 +28,11 @@ class EntregaColetivoScreen extends StatefulWidget {
 
 class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   final TextEditingController _numeroController = TextEditingController();
+  final TextEditingController _obsController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
   final fotoProvider = FotoProvider();
+  final ocorrenciaProvider = OcorrenciaProvider();
   int qtdEntrega = 0;
   List listaCodBarras = [];
   String codBarras = '';
@@ -37,6 +40,8 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   Color colorWifi = Colors.white;
   File arquivo;
   String versaoApp = Utility.getDadosApp().values.elementAt(5);
+  final dropValue = ValueNotifier('');
+  final List<String> dropOption = [];
 
   @override
   initState() {
@@ -44,6 +49,8 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     getQtdEntregasPendente(context);
     _getStatusNet(context);
     _determinePosition();
+    _getListaNomeOcorrencia();
+    //print('${DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now())}');
   }
 
   Future<Position> _determinePosition() async {
@@ -224,46 +231,29 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     }
     try {
       loading.value = true;
-      if (arquivo != null) {
-        File imagem = File(arquivo.path);
-        Uint8List imagebytes = await imagem.readAsBytes();
-        //DateFormat("y-MM-d HH:mm:ss").format(DateTime.now())
-        var foto = RetornoFoto();
-        foto.codBarras = codBarras;
-        foto.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now());
-        foto.instalacao = '';
-        foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
-        foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
-        foto.pendente = 1;
-        foto.assinatura = 0;
-        fotoProvider.insert(
-          {
-            'idUsuario': user.id,
-            'codBarras': foto.codBarras,
-            'dataExecucao': foto.dataExecucao,
-            'instalacao': foto.instalacao,
-            'nome': foto.nome,
-            'imagem': foto.imagem,
-            'pendente': foto.pendente,
-            'assinatura': foto.assinatura,
-          },
-        );
-      }
       Position position = await _determinePosition();
       RetornoEntrega retornoRest = RetornoEntrega();
       retornoRest.listaIdEntrega = [];
       List<String> listaFaturasEntregues = [];
+      var ocorrencia = await ocorrenciaProvider.getOcorrenciaPorNome(dropValue.value.toString());
+      if (ocorrencia.isEmpty) {
+        loading.value = false;
+        Utility.snackbar(context, 'INFORME UMA OCORRENCIA!');
+        return;
+      }
       listaCodBarras.forEach((element) => {
             retornoRest.listaIdEntrega.add(int.tryParse(element['id'].toString())),
             retornoRest.idEntrega = int.tryParse(element['id'].toString()),
             retornoRest.idUsuario = user.id,
-            retornoRest.idOcorrencia = 1,
-            retornoRest.dataExecucao = DateFormat("y-MM-d HH:mm:ss").format(DateTime.now()),
+            retornoRest.idOcorrencia = ocorrencia[0]['id'],
+            retornoRest.dataExecucao = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now()),
             retornoRest.latitude = position.latitude.toString(),
             retornoRest.longitude = position.longitude.toString(),
             retornoRest.imei = '',
-            retornoRest.observacao = '',
+            retornoRest.observacao = _obsController.text == null ? '' : _obsController.text.trim(),
             retornoRest.assinatura = 0,
+            retornoRest.predio = 1,
+            retornoRest.pendente = 1,
             retornoRest.matricula = '',
             retornoRest.versaoApp = versaoApp,
             listaFaturasEntregues.add(element['codBarras']),
@@ -272,7 +262,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                 'idImportacao': int.tryParse(element['idImportacao'].toString()),
                 'idEntrega': int.tryParse(element['id'].toString()),
                 'idUsuario': int.tryParse(user.id.toString()),
-                'idOcorrencia': 1,
+                'idOcorrencia': retornoRest.idOcorrencia,
                 'grupoFaturamento': int.tryParse(element['grupoFaturamento'].toString()),
                 'dataExecucao': retornoRest.dataExecucao,
                 'roteiro': element['roteiro'],
@@ -293,7 +283,31 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
               },
             )
           });
-      arquivo = null;
+      if (arquivo != null) {
+        File imagem = File(arquivo.path);
+        Uint8List imagebytes = await imagem.readAsBytes();
+        //DateFormat("y-MM-d HH:mm:ss").format(DateTime.now())
+        var foto = RetornoFoto();
+        foto.codBarras = codBarras;
+        foto.dataExecucao = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
+        foto.instalacao = '';
+        foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
+        foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
+        foto.pendente = 1;
+        foto.assinatura = 0;
+        fotoProvider.insert(
+          {
+            'idUsuario': user.id,
+            'codBarras': foto.codBarras,
+            'dataExecucao': foto.dataExecucao,
+            'instalacao': foto.instalacao,
+            'nome': foto.nome,
+            'imagem': foto.imagem,
+            'pendente': foto.pendente,
+            'assinatura': foto.assinatura,
+          },
+        );
+      }
       if (listaFaturasEntregues.isNotEmpty) {
         listaFaturasEntregues.forEach((element) async => {
               await entregaProvider.getListaRetornoEntrega(element).then(
@@ -303,12 +317,19 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                           result.forEach(
                             (element) => {entregaProvider.setFaturaEntregue(element['codBarras'])},
                           ),
-                          sincronizarRetornoColetivo(context, retornoRest),
+                          sincronizarRetornoColetivo(context, retornoRest)
                         }
                     },
                   ),
             });
       }
+      codBarras = '';
+      listaCodBarras.clear();
+      enderecoColetivo = '';
+      _numeroController.text = '';
+      _obsController.text = '';
+      dropValue.value = null;
+      arquivo = null;
     } catch (Exc) {
       loading.value = false;
       print('$Exc');
@@ -321,16 +342,23 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     if (Utility.isNet) {
       try {
         loading.value = true;
-        List<RetornoEntrega> listaRetorno = [];
+        final List<RetornoEntrega> listaRetorno = [];
         listaRetorno.add(retornoEntrega);
-        final future = entregaProvider.sincronizarRetorno(listaRetorno);
+        //print('LISTA RETORNO ENTREGA');
+        //print('${jsonEncode(listaRetorno).toString()}');
+        // print('${jsonEncode(listaRetorno)}');
+        final future = entregaProvider.sincronizarRetornoColetivo(listaRetorno);
         future.then(
           (response) => {
-            jsonDecode(response.body).forEach(
-              (idEntrega) => {
-                entregaProvider.marcarRetornoEnviadoPorIdEntrega(idEntrega),
+            // print('RESPONSE: ${response.body}'),
+            if (response.body.isNotEmpty)
+              {
+                jsonDecode(response.body).forEach(
+                  (idEntrega) => {
+                    entregaProvider.marcarRetornoEnviadoPorIdEntrega(idEntrega),
+                  },
+                ),
               },
-            ),
             getQtdEntregasPendente(context),
           },
         );
@@ -341,8 +369,25 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
       }
     } else {
       getQtdEntregasPendente(context);
-      //loading.value = false;
     }
+  }
+
+  Future<void> _getListaNomeOcorrencia() async {
+    if (dropOption.isNotEmpty) {
+      setState(() {
+        dropOption.clear();
+      });
+    }
+    await ocorrenciaProvider.getOcorrenciaAll().then((result) => {
+          result.forEach(
+            (element) => {
+              dropOption.add(element['nome']),
+            },
+          ),
+          setState(() {
+            dropOption;
+          }),
+        });
   }
 
   @override
@@ -363,7 +408,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
             onPressed: () => Get.to(
               () => CameraCamera(onFile: (file) => showPreview(file)),
             ),
-            // onPressed: () => openCamera(context),
           ),
           IconButton(
             icon: Icon(
@@ -390,7 +434,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                     children: [
                       Container(
                         alignment: Alignment.center,
-                        margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+                        margin: const EdgeInsets.fromLTRB(5, 5, 5, 5),
                         //padding: const EdgeInsets.fromLTRB(5, 0, 5, 5),
                         child: Text(
                           'PRIMEIRO INFORME O Nº DO ENDERECO!',
@@ -404,7 +448,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                       Container(
                         alignment: Alignment.center,
                         margin: const EdgeInsets.fromLTRB(5, 0, 5, 10),
-                        padding: const EdgeInsets.all(5),
+                        padding: const EdgeInsets.fromLTRB(3, 5, 3, 0),
                         child: TextField(
                           controller: _numeroController,
                           keyboardType: TextInputType.number,
@@ -419,7 +463,8 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                       ),
                       Container(
                         alignment: Alignment.center,
-                        margin: const EdgeInsets.fromLTRB(5, 10, 5, 0),
+                        margin: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
                         child: Text(
                           '$enderecoColetivo',
                           style: const TextStyle(
@@ -432,27 +477,81 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                       Container(
                         width: double.infinity,
                         alignment: Alignment.center,
-                        margin: const EdgeInsets.all(5),
-                        padding: const EdgeInsets.all(5),
+                        margin: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(2),
                         child: arquivo != null ? Anexo(arquivo: arquivo) : const Text(''),
                       ),
                       arquivo != null
                           ? Align(
                               alignment: Alignment.bottomCenter,
                               child: Padding(
-                                padding: const EdgeInsets.all(0),
+                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
                                 child: CircleAvatar(
-                                  radius: 32,
+                                  radius: 18,
                                   backgroundColor: Colors.black.withOpacity(0.5),
                                   child: IconButton(
                                     icon: const Icon(
                                       Icons.close,
                                       color: Colors.white,
-                                      size: 30,
+                                      size: 21,
                                     ),
                                     onPressed: () => removePhoto(),
                                   ),
                                 ),
+                              ),
+                            )
+                          : const Text(''),
+                      codBarras.trim() != '' || listaCodBarras.isNotEmpty
+                          ? Center(
+                              child: ValueListenableBuilder(
+                                valueListenable: dropValue,
+                                builder: (BuildContext context, String value, _) {
+                                  return Container(
+                                    margin: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.all(5),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: DropdownButtonFormField<String>(
+                                        isExpanded: true,
+                                        icon: const Icon(Icons.arrow_drop_down_circle_sharp),
+                                        hint: const Text('SELECIONE A OCORRENCIA'),
+                                        decoration: InputDecoration(
+                                          label: const Text('OCORRENCIA'),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(15),
+                                          ),
+                                        ),
+                                        value: (value.isEmpty ? null : value),
+                                        onChanged: (selected) => dropValue.value = selected.toString(),
+                                        items: dropOption
+                                            .map((op) => DropdownMenuItem(
+                                                  value: op,
+                                                  child: Text(op),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : const Text(''),
+                      codBarras.trim() != '' || listaCodBarras.isNotEmpty
+                          ? Container(
+                              alignment: Alignment.center,
+                              margin: const EdgeInsets.fromLTRB(5, 10, 5, 10),
+                              padding: const EdgeInsets.fromLTRB(3, 5, 3, 0),
+                              child: TextField(
+                                controller: _obsController,
+                                keyboardType: TextInputType.multiline,
+                                maxLines: 3,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                                  labelText: 'OBSERVACAO',
+                                  labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
+                                  hintText: 'OBSERVACAO',
+                                ),
+                                style: Theme.of(context).textTheme.headline5,
                               ),
                             )
                           : const Text(''),

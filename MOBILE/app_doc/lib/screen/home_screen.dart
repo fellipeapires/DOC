@@ -6,8 +6,10 @@ import 'dart:convert';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/component/info_app.dart';
 import 'package:app_doc/model/entrega.dart';
+import 'package:app_doc/model/ocorrencia.dart';
 import 'package:app_doc/model/retorno_entrega.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
+import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:flutter/material.dart';
 import '../model/user.dart';
 import '../util/app_routes.dart';
@@ -21,8 +23,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
+  final ocorrenciaProvider = OcorrenciaProvider();
   Color colorWifi = Colors.white;
   int contador = 0;
+
+  @override
+  initState() {
+    super.initState();
+    getOcorrenciaApi(context);
+  }
 
   void _checkInternet(BuildContext context) async {
     await Utility.getStatusNet(context);
@@ -39,6 +48,51 @@ class _HomeScreenState extends State<HomeScreen> {
     Utility.setAppRouter(context, appRoute, argumets);
   }
 
+  Future<void> getOcorrenciaApi(BuildContext context) async {
+    await Utility.getStatusNet(context);
+    if (Utility.isNet) {
+      try {
+        await ocorrenciaProvider.deleteAll('ocorrencia');
+        loading.value = true;
+        Ocorrencia ocorrencia;
+        final future = ocorrenciaProvider.getOcorrenciaApi();
+        future.then(
+          (response) => {
+            jsonDecode(response.body).forEach(
+              (element) => {
+                ocorrencia = Ocorrencia(),
+                ocorrencia.id = int.tryParse(element['id'].toString()),
+                ocorrencia.nome = element['nome'],
+                ocorrencia.codigo = int.tryParse(element['codigo'].toString()),
+                ocorrencia.tipo = int.tryParse(element['tipo'].toString()),
+                ocorrencia.situacao = int.tryParse(element['ativo'].toString()),
+                ocorrencia.situacaoFoto = int.tryParse(element['situacaoFoto'].toString()),
+                ocorrencia.qtdMinimaFoto = int.tryParse(element['qtMinimaFoto'].toString()),
+                ocorrencia.dataAtualizacao = element['dataAtualizacao'],
+                ocorrenciaProvider.insert(
+                  {
+                    'id': ocorrencia.id,
+                    'nome': ocorrencia.nome,
+                    'codigo': ocorrencia.codigo,
+                    'tipo': ocorrencia.tipo,
+                    'situacao': ocorrencia.situacao,
+                    'situacaoFoto': ocorrencia.situacaoFoto,
+                    'qtdMinimaFoto': ocorrencia.qtdMinimaFoto,
+                    'dataAtualizacao': ocorrencia.dataAtualizacao,
+                  },
+                ),
+              },
+            ),
+            loading.value = false,
+          },
+        );
+      } catch (Exc) {
+        print('$Exc');
+        Utility.snackbar(context, 'ERRO DE DOWNLOAD DE OCORRENCIA: $Exc');
+      }
+    }
+  }
+
   Future<void> getCargaEntrega(BuildContext context, int idUsuario) async {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
@@ -49,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         final future = entregaProvider.getCargaAPI(idUsuario);
         future.then((response) => {
+              //  print('${jsonDecode(response.body)}'),
               listaCarga = jsonDecode(response.body),
               if (listaCarga.isNotEmpty)
                 {
@@ -97,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
             });
       } catch (Exc) {
         print('$Exc');
-        Utility.snackbar(context, 'ERRO DE CARGA: $Exc');
+        Utility.snackbar(context, 'ERRO NO DOWNLOAD DA OCORRENCIA: $Exc');
       }
     } else {
       Utility.snackbar(context, 'SEM CONEXAO COM A INTERNET!');
@@ -152,9 +207,12 @@ class _HomeScreenState extends State<HomeScreen> {
               result.forEach(
                 (element) => {
                   retornoRest = RetornoEntrega(),
+                  retornoRest.idImportacao = int.tryParse(element['idImportacao'].toString()),
                   retornoRest.idUsuario = int.tryParse(element['idUsuario'].toString()),
                   retornoRest.idEntrega = int.tryParse(element['idEntrega'].toString()),
                   retornoRest.idOcorrencia = int.tryParse(element['idOcorrencia'].toString()),
+                  retornoRest.codBarras = element['codBarras'],
+                  retornoRest.codigo = element['codigo'],
                   retornoRest.dataExecucao = element['dataExecucao'],
                   retornoRest.latitude = element['laitude'],
                   retornoRest.longitude = element['longitude'],
@@ -167,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   listaRetorno.add(retornoRest),
                 },
               ),
+              // print('${jsonEncode(listaRetorno).toString()}'),
               sincronizarRetornoEntrega(context, listaRetorno),
             }
           else
@@ -186,6 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       try {
+        //print('${jsonEncode(listaRetorno)}');
         final future = entregaProvider.sincronizarRetorno(listaRetorno);
         future.then(
           (response) => {

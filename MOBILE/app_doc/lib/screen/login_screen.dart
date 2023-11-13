@@ -48,17 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  // void _setColorIconWifi(BuildContext context) async {
-  //   await Utility.getStatusNet(context);
-  //   setState(() {
-  //     if (Utility.isNet) {
-  //       colorWifi = Colors.white;
-  //     } else {
-  //       colorWifi = Colors.red[800];
-  //     }
-  //   });
-  // }
-
   Future<void> getUsuario(String login, String senha) async {
     var user = null;
     if (listaUser.isNotEmpty) {
