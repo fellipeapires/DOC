@@ -293,6 +293,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         foto.instalacao = '';
         foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
         foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
+        foto.imei = '';
         foto.pendente = 1;
         foto.assinatura = 0;
         fotoProvider.insert(
@@ -303,6 +304,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
             'instalacao': foto.instalacao,
             'nome': foto.nome,
             'imagem': foto.imagem,
+            'imei': foto.imei,
             'pendente': foto.pendente,
             'assinatura': foto.assinatura,
           },

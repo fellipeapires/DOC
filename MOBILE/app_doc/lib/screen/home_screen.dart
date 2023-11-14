@@ -8,7 +8,9 @@ import 'package:app_doc/component/info_app.dart';
 import 'package:app_doc/model/entrega.dart';
 import 'package:app_doc/model/ocorrencia.dart';
 import 'package:app_doc/model/retorno_entrega.dart';
+import 'package:app_doc/model/retorno_foto.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
+import 'package:app_doc/provider/foto_provider.dart';
 import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:flutter/material.dart';
 import '../model/user.dart';
@@ -24,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
   final ocorrenciaProvider = OcorrenciaProvider();
+  final fotoProvider = FotoProvider();
   Color colorWifi = Colors.white;
   int contador = 0;
 
@@ -261,6 +264,74 @@ class _HomeScreenState extends State<HomeScreen> {
         loading.value = false;
         print('$Exc');
         Utility.snackbar(context, 'ERRO SINCRONIZAR ENTREGA: $Exc');
+      }
+    } else {
+      loading.value = false;
+      Utility.snackbar(context, 'SEM CONEXAO DE INTERNET PARA SINCRONIZAR');
+    }
+  }
+
+  Future<void> iniciarSincronismoFoto(BuildContext context) async {
+    loading.value = true;
+    try {
+      RetornoFoto retornoFoto;
+      List<RetornoFoto> listaFoto = [];
+      final future = fotoProvider.getListaFotoPendenteSinc();
+      future.then(
+        (result) => {
+          if (result.isNotEmpty)
+            {
+              result.forEach(
+                (element) => {
+                  retornoFoto = RetornoFoto(),
+                  retornoFoto.idUsuario = int.tryParse(element['idUsuario'].toString()),
+                  retornoFoto.nome = element['nome'],
+                  retornoFoto.dataExecucao = element['dataExecucao'],
+                  retornoFoto.codBarras = element['codBarras'],
+                  retornoFoto.instalacao = element['instalacao'],
+                  retornoFoto.imagem = element['imagem'],
+                  retornoFoto.imei = element['imei'],
+                  retornoFoto.pendente = int.tryParse(element['pendente'].toString()),
+                  retornoFoto.assinatura = int.tryParse(element['assinatura'].toString()),
+                  listaFoto.add(retornoFoto),
+                },
+              ),
+              // print('${jsonEncode(listaRetorno).toString()}'),
+              sincronizarFoto(context, listaFoto),
+            }
+          else
+            {
+              loading.value = false,
+            }
+        },
+      );
+    } catch (Exc) {
+      loading.value = false;
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO OBTER LISTA DE FOTOS: $Exc');
+    }
+  }
+
+  Future<void> sincronizarFoto(BuildContext context, List<RetornoFoto> listaFoto) async {
+    await Utility.getStatusNet(context);
+    if (Utility.isNet) {
+      try {
+        //print('${jsonEncode(listaRetorno)}');
+        final future = fotoProvider.sincronizarFoto(listaFoto);
+        future.then(
+          (response) => {
+            jsonDecode(response.body).forEach(
+              (codBarras) => {
+                fotoProvider.marcarFotoEnviadoPorCodBarras(codBarras),
+              },
+            ),
+            loading.value = false,
+          },
+        );
+      } catch (Exc) {
+        loading.value = false;
+        print('$Exc');
+        Utility.snackbar(context, 'ERRO SINCRONIZAR FOTO: $Exc');
       }
     } else {
       loading.value = false;
@@ -590,7 +661,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.autorenew_sharp,
                               size: 25,
                             ),
-                            onPressed: () => null,
+                            onPressed: () => iniciarSincronismoFoto(context),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),
