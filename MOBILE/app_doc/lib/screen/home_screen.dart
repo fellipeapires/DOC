@@ -296,7 +296,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   listaFoto.add(retornoFoto),
                 },
               ),
-              // print('${jsonEncode(listaRetorno).toString()}'),
               sincronizarFoto(context, listaFoto),
             }
           else
