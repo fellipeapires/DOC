@@ -34,6 +34,11 @@ class EntregaProvider {
     DatabaseApp.insert('entrega', data);
   }
 
+  Future<List<Map<String, dynamic>>> getEntregaPorCodBarras(String codBarras) async {
+    final db = await DatabaseApp.dataBase();
+    return db.query('entrega', where: 'codBarras = ?', whereArgs: [codBarras]);
+  }
+
   Future<List<Map<String, dynamic>>> getEstatistica() async {
     final db = await DatabaseApp.dataBase();
     return db.rawQuery(

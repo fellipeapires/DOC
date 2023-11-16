@@ -114,7 +114,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   Future<void> readQRCode(BuildContext context) async {
     try {
       if (_numeroController.text.isEmpty || _numeroController.text.trim() == '') {
-        Utility.snackbar(context, 'INFORME O Nº DO ENDERECO ANTES DE SCANNEAR!');
+        Utility.snackbar(context, 'INFORME O Nº DO ENDERECO ANTES DE ESCANEAR!');
         return null;
       }
       codBarras = '';
@@ -226,7 +226,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
 
   Future<void> _entregar(BuildContext context, User user) async {
     if (codBarras.trim() == '' || listaCodBarras.isEmpty) {
-      Utility.snackbar(context, 'PRIMEIRO SCANNEAR A CONTA PARA REALIZAR A ENTREGAR!');
+      Utility.snackbar(context, 'PRIMEIRO ESCANEAR A CONTA PARA REALIZAR A ENTREGAR!');
       return;
     }
     try {
@@ -273,7 +273,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                 'codCliente': element['codCliente'],
                 'imei': retornoRest.imei,
                 'observacao': retornoRest.observacao,
-                'altitude': '0',
                 'latitude': position.latitude.toString(),
                 'longitude': position.longitude.toString(),
                 'assinatura': retornoRest.assinatura,
@@ -335,7 +334,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     } catch (Exc) {
       loading.value = false;
       print('$Exc');
-      Utility.snackbar(context, 'ERRO AO SALVAR FATURAS: $Exc');
+      Utility.snackbar(context, 'ERRO AO SALVAR AS FATURAS: $Exc');
     }
   }
 
@@ -590,7 +589,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                             height: 60,
                             width: 160,
                             child: ElevatedButton(
-                              child: const Text('SCANNEAR'),
+                              child: const Text('ESCANEAR'),
                               onPressed: () => readQRCode(context),
                               style: TextButton.styleFrom(
                                 elevation: 10,
