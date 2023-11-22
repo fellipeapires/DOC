@@ -364,7 +364,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
       codBarras = '';
       statusCodBarras = '';
       _obsController.text = '';
-      dropValue.value = null;
+      dropValue.value = '';
       arquivo = null;
     } catch (Exc) {
       loading.value = false;
@@ -382,7 +382,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
         listaRetorno.add(retornoEntrega);
         //print('LISTA RETORNO ENTREGA');
         //print('${jsonEncode(listaRetorno).toString()}');
-        // print('${jsonEncode(listaRetorno)}');
+        //print('${jsonEncode(listaRetorno)}');
         final future = entregaProvider.sincronizarRetorno(listaRetorno);
         future.then(
           (response) => {

@@ -329,7 +329,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
       enderecoColetivo = '';
       _numeroController.text = '';
       _obsController.text = '';
-      dropValue.value = null;
+      dropValue.value = '';
       arquivo = null;
     } catch (Exc) {
       loading.value = false;
