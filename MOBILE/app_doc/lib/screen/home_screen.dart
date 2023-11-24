@@ -65,27 +65,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _createBackup(int idUser) async {
-    setState(() {
-      loading.value = true;
-    });
+    try {
+      setState(() {
+        loading.value = true;
+      });
 
-    String prefixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
+      String prefixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
 
-    List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
-    if (listaFoto.isNotEmpty) {
-      String fotoJson = jsonEncode(listaFoto);
-      await FileManager().writeJsonFile(fotoJson, 'backup_foto_${prefixBackup}');
+      List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+      if (listaFoto.isNotEmpty) {
+        String fotoJson = jsonEncode(listaFoto);
+        await FileManager().writeJsonFile(fotoJson, 'backup_foto_${prefixBackup}');
+      }
+
+      List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
+      if (listaRetornoEntrega.isNotEmpty) {
+        String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
+        await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${prefixBackup}');
+      }
+
+      setState(() {
+        loading.value = false;
+      });
+    } catch (Exc) {
+      setState(() {
+        loading.value = false;
+      });
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO NA GERACAO DO BACKUP: $Exc');
     }
-
-    List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
-    if (listaRetornoEntrega.isNotEmpty) {
-      String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
-      await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${prefixBackup}');
-    }
-
-    setState(() {
-      loading.value = false;
-    });
   }
 
   void _setPage(BuildContext context, String appRoute, Object argumets) {
