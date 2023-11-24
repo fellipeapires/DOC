@@ -15,6 +15,7 @@ import 'package:app_doc/provider/foto_provider.dart';
 import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:app_doc/util/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../model/user.dart';
 import '../util/app_routes.dart';
@@ -63,21 +64,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _createBackup() async {
+  Future<void> _createBackup(int idUser) async {
     setState(() {
       loading.value = true;
     });
 
+    String prefixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
+
     List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
     if (listaFoto.isNotEmpty) {
       String fotoJson = jsonEncode(listaFoto);
-      await FileManager().writeJsonFile(fotoJson, "backup_foto");
+      await FileManager().writeJsonFile(fotoJson, 'backup_foto_${prefixBackup}');
     }
 
     List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
     if (listaRetornoEntrega.isNotEmpty) {
       String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
-      await FileManager().writeJsonFile(retornoEntregaJson, "backup_retorno_entrega");
+      await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${prefixBackup}');
     }
 
     setState(() {
@@ -761,7 +764,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.backup_sharp,
                               size: 25,
                             ),
-                            onPressed: () => _createBackup(),
+                            onPressed: () => _createBackup(user.id),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),

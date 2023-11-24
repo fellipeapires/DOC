@@ -290,7 +290,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         foto.codBarras = codBarras;
         foto.dataExecucao = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
         foto.instalacao = '';
-        foto.nome = '${user.id}${DateFormat("yMdHHmmsssss").format(DateTime.now())}';
+        foto.nome = '${user.id}${DateFormat("yMdHHmmss").format(DateTime.now())}';
         foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
         foto.imei = '';
         foto.pendente = 1;
