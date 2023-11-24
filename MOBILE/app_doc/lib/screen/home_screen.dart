@@ -1,10 +1,11 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print, avoid_returning_null_for_void, avoid_function_literals_in_foreach_calls
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print, avoid_returning_null_for_void, avoid_function_literals_in_foreach_calls, unused_element
 
 import 'dart:convert';
 //import 'dart:ui';
 
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/component/info_app.dart';
+import 'package:app_doc/database/database_app.dart';
 import 'package:app_doc/model/entrega.dart';
 import 'package:app_doc/model/ocorrencia.dart';
 import 'package:app_doc/model/retorno_entrega.dart';
@@ -12,7 +13,9 @@ import 'package:app_doc/model/retorno_foto.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
 import 'package:app_doc/provider/foto_provider.dart';
 import 'package:app_doc/provider/ocorrencia_provider.dart';
+import 'package:app_doc/util/file_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../model/user.dart';
 import '../util/app_routes.dart';
 import '../util/utility.dart';
@@ -34,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   initState() {
     super.initState();
     getOcorrenciaApi(context);
+    _permissionStorage();
   }
 
   void _checkInternet(BuildContext context) async {
@@ -44,6 +48,40 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         colorWifi = Colors.red[800];
       }
+    });
+  }
+
+//verficar caminho do diretório do DB
+  void _getDbPath() async {
+    await DatabaseApp().getDbPath();
+  }
+
+  void _permissionStorage() async {
+    var statusStorage = await Permission.storage.status;
+    if (!statusStorage.isGranted) {
+      await Permission.storage.request();
+    }
+  }
+
+  Future<void> _createBackup() async {
+    setState(() {
+      loading.value = true;
+    });
+
+    List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+    if (listaFoto.isNotEmpty) {
+      String fotoJson = jsonEncode(listaFoto);
+      await FileManager().writeJsonFile(fotoJson, "backup_foto");
+    }
+
+    List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
+    if (listaRetornoEntrega.isNotEmpty) {
+      String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
+      await FileManager().writeJsonFile(retornoEntregaJson, "backup_retorno_entrega");
+    }
+
+    setState(() {
+      loading.value = false;
     });
   }
 
@@ -723,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.backup_sharp,
                               size: 25,
                             ),
-                            onPressed: () => _setPage(context, AppRoutes.BACKUP, user),
+                            onPressed: () => _createBackup(),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),

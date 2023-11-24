@@ -1,7 +1,11 @@
-// ignore_for_file: unused_import, missing_return, unused_local_variable, unnecessary_this
+// ignore_for_file: unused_import, missing_return, unused_local_variable, unnecessary_this, avoid_print
 
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:path/path.dart' as path;
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseApp {
   static Future<sql.Database> dataBase() async {
@@ -49,5 +53,15 @@ class DatabaseApp {
   static Future<List<Map<String, dynamic>>> getData(String table) async {
     final db = await DatabaseApp.dataBase();
     return db.query(table);
+  }
+
+  getDbPath() async {
+    String dataBasePath = await getDatabasesPath();
+    print('=============databasePath $dataBasePath');
+    // /data/user/0/com.example.app_doc/databases
+
+    Directory externalStoragePath = await getExternalStorageDirectory();
+    print('=============externalStoragePath $externalStoragePath');
+    // /storage/emulated/0/Android/data/com.example.app_doc/files
   }
 }

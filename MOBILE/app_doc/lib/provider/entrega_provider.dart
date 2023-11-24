@@ -143,4 +143,8 @@ class EntregaProvider {
     final db = await DatabaseApp.dataBase();
     return db.rawUpdate('UPDATE retorno_entrega SET pendente = 0 WHERE idEntrega = ?', [idEntrega]);
   }
+
+  Future<List<Map<String, dynamic>>> getRetornoEntregaAll() async {
+    return DatabaseApp.getData('retorno_entrega');
+  }
 }

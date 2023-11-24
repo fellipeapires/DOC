@@ -18,32 +18,6 @@ class FotoProvider {
     );
   }
 
-  // Future<List<int>>  sincronizarRetornoFoto(List<Object>listaSincFoto) async {
-  //    try{
-  //      List<int> lista =[];
-  //      String url = '$_apiUrl/retorno-foto/incluir';
-  //      String strBody = jsonEncode(listaSincFoto.map((e) => e.toJson()).toList()).toString();
-  //      Map<String, String> headers = {
-  //        'Accept': 'application/json',
-  //        'Content-Type': 'application/json'
-  //      };
-  //      http.Response response = await http.post(headers: headers, Uri.parse(url), body: strBody);
-  //      dynamic dadosJson = json.decode(utf8.decode(response.body.codeUnits));
-  //      if(response.statusCode != 200){
-  //        //ToastMesage.showToastError("Sem resposta do servidor");
-  //      }else{
-  //        for(var idServico in dadosJson){
-  //          lista.add(idServico);
-  //        }
-  //        return lista;
-  //      }
-  //      return lista;
-  //    }catch(error){
-  //      print(error);
-  //      throw Exception();
-  //    }
-  //  }
-
   Future<http.Response> sincronizarFoto(List<RetornoFoto> listaRetorno) async {
     String url = '$_apiUrl/retornofoto/upload-img';
     Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
@@ -53,6 +27,10 @@ class FotoProvider {
       headers: headers,
       body: strBody,
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getFotoAll() async {
+    return DatabaseApp.getData('retorno_foto');
   }
 
   Future<List<Map<String, dynamic>>> getListaFotoPendenteSinc() async {

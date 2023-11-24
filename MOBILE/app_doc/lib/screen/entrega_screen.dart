@@ -331,7 +331,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
             'codBarras': foto.codBarras,
             'dataExecucao': foto.dataExecucao,
             'instalacao': foto.instalacao,
-            'nome': foto.nome,
+            'nome': '${codBarras}_${foto.nome}.jpg',
             'imagem': foto.imagem,
             'imei': foto.imei,
             'pendente': foto.pendente,
@@ -358,6 +358,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
                     },
                   ),
             });
+        iniciarSincronismoFoto(context);
       } else {
         loading.value = false;
       }
@@ -405,6 +406,73 @@ class _EntregaScreenState extends State<EntregaScreen> {
       }
     } else {
       loading.value = false;
+    }
+  }
+
+  Future<void> iniciarSincronismoFoto(BuildContext context) async {
+    loading.value = true;
+    try {
+      RetornoFoto retornoFoto;
+      List<RetornoFoto> listaFoto = [];
+      final future = fotoProvider.getListaFotoPendenteSinc();
+      future.then(
+        (result) => {
+          if (result.isNotEmpty)
+            {
+              result.forEach(
+                (element) => {
+                  retornoFoto = RetornoFoto(),
+                  retornoFoto.idUsuario = int.tryParse(element['idUsuario'].toString()),
+                  retornoFoto.nome = element['nome'],
+                  retornoFoto.dataExecucao = element['dataExecucao'],
+                  retornoFoto.codBarras = element['codBarras'],
+                  retornoFoto.instalacao = element['instalacao'],
+                  retornoFoto.imagem = element['imagem'],
+                  retornoFoto.imei = element['imei'],
+                  retornoFoto.pendente = int.tryParse(element['pendente'].toString()),
+                  retornoFoto.assinatura = int.tryParse(element['assinatura'].toString()),
+                  listaFoto.add(retornoFoto),
+                },
+              ),
+              sincronizarFoto(context, listaFoto),
+            }
+          else
+            {
+              loading.value = false,
+            }
+        },
+      );
+    } catch (Exc) {
+      loading.value = false;
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO OBTER LISTA DE FOTOS: $Exc');
+    }
+  }
+
+  Future<void> sincronizarFoto(BuildContext context, List<RetornoFoto> listaFoto) async {
+    await Utility.getStatusNet(context);
+    if (Utility.isNet) {
+      try {
+        //print('${jsonEncode(listaRetorno)}');
+        final future = fotoProvider.sincronizarFoto(listaFoto);
+        future.then(
+          (response) => {
+            jsonDecode(response.body).forEach(
+              (codBarras) => {
+                fotoProvider.marcarFotoEnviadoPorCodBarras(codBarras),
+              },
+            ),
+            loading.value = false,
+          },
+        );
+      } catch (Exc) {
+        loading.value = false;
+        print('$Exc');
+        Utility.snackbar(context, 'ERRO SINCRONIZAR FOTO: $Exc');
+      }
+    } else {
+      loading.value = false;
+      Utility.snackbar(context, 'SEM CONEXAO DE INTERNET PARA SINCRONIZAR');
     }
   }
 
