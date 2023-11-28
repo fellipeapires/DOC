@@ -70,6 +70,11 @@ class EntregaProvider {
     return db.rawUpdate('UPDATE entrega SET pendente = 0 WHERE codBarras = ?', [codBarras]);
   }
 
+  Future<void> apagarDadosEntrega() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete('DELETE FROM entrega WHERE pendente = 0 AND codBarras in(SELECT codBarras FROM retorno_entrega WHERE pendente = 0 GROUP BY codBarras)');
+  }
+
   Future<http.Response> sincronizarRetorno(List<RetornoEntrega> listaRetorno) async {
     String url = '$_apiUrl/retornoentregas/incluirmobile';
     Map<String, String> headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
@@ -146,5 +151,10 @@ class EntregaProvider {
 
   Future<List<Map<String, dynamic>>> getRetornoEntregaAll() async {
     return DatabaseApp.getData('retorno_entrega');
+  }
+
+  Future<void> apagarDadosRetornoEntrega() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete('DELETE FROM retorno_entrega WHERE pendente = 0');
   }
 }

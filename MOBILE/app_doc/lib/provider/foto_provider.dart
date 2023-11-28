@@ -46,4 +46,9 @@ class FotoProvider {
   Future<void> insert(Map<String, dynamic> data) async {
     DatabaseApp.insert('retorno_foto', data);
   }
+
+  Future<void> apagarDados() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete('DELETE FROM retorno_foto WHERE pendente = 0');
+  }
 }

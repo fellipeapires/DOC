@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, use_build_context_synchronously, unused_element, non_constant_identifier_names, avoid_print, avoid_function_literals_in_foreach_calls, sort_child_properties_last
+// ignore_for_file: use_key_in_widget_constructors, unnecessary_string_interpolations, use_build_context_synchronously, unused_element, non_constant_identifier_names, avoid_print, avoid_function_literals_in_foreach_calls, sort_child_properties_last, unused_field
 
 import 'dart:convert';
 import 'dart:io';
@@ -12,6 +12,7 @@ import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:app_doc/screen/preview_screen.dart';
 import 'package:app_doc/widgets/anexo.dart';
 import 'package:camera_camera/camera_camera.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
@@ -19,6 +20,7 @@ import 'package:app_doc/util/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:imei_plugin/imei_plugin.dart';
 import 'package:intl/intl.dart';
 
 class EntregaScreen extends StatefulWidget {
@@ -27,6 +29,9 @@ class EntregaScreen extends StatefulWidget {
 }
 
 class _EntregaScreenState extends State<EntregaScreen> {
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  Map<String, dynamic> _deviceData = <String, dynamic>{};
+  String _platformImei = 'Unknown';
   final TextEditingController _obsController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
@@ -48,6 +53,69 @@ class _EntregaScreenState extends State<EntregaScreen> {
     _getStatusNet(context);
     _determinePosition();
     _getListaNomeOcorrencia();
+    _initPlatformState();
+  }
+
+  Future<void> _getImei() async {
+    String platformImei;
+    try {
+      platformImei = await ImeiPlugin.getImei(shouldShowRequestPermissionRationale: false);
+      // List<String> multiImei = await ImeiPlugin.getImeiMulti();
+    } catch (e) {
+      platformImei = 'Failed to get platform version.';
+    }
+    if (!mounted) return;
+    setState(() {
+      _platformImei = platformImei;
+    });
+  }
+
+  Future<void> _initPlatformState() async {
+    await _getImei();
+    var deviceData = <String, dynamic>{};
+    try {
+      deviceData = _readAndroidBuildData(await deviceInfoPlugin.androidInfo);
+    } catch (e) {
+      deviceData = <String, dynamic>{'Error:': 'Failed to get platform version.'};
+    }
+    if (!mounted) return;
+    setState(() {
+      _deviceData = deviceData;
+    });
+    //print('${jsonEncode(_deviceData)}');
+  }
+
+  Map<String, dynamic> _readAndroidBuildData(AndroidDeviceInfo build) {
+    return <String, dynamic>{
+      'imei': _platformImei,
+      'version.securityPatch': build.version.securityPatch,
+      'version.sdkInt': build.version.sdkInt,
+      'version.release': build.version.release,
+      'version.previewSdkInt': build.version.previewSdkInt,
+      'version.incremental': build.version.incremental,
+      'version.codename': build.version.codename,
+      'version.baseOS': build.version.baseOS,
+      'board': build.board,
+      'bootloader': build.bootloader,
+      'brand': build.brand,
+      'device': build.device,
+      'display': build.display,
+      'fingerprint': build.fingerprint,
+      'hardware': build.hardware,
+      'host': build.host,
+      'id': build.id,
+      'marca': build.manufacturer,
+      'model': build.model,
+      'product': build.product,
+      'supported32BitAbis': build.supported32BitAbis,
+      'supported64BitAbis': build.supported64BitAbis,
+      'supportedAbis': build.supportedAbis,
+      'tags': build.tags,
+      'type': build.type,
+      'isPhysicalDevice': build.isPhysicalDevice,
+      'androidId': build.androidId,
+      'systemFeatures': build.systemFeatures,
+    };
   }
 
   Future<Position> _determinePosition() async {
@@ -127,7 +195,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
       );
       setState(() {
         codBarras = code != '-1' ? code : '';
-        statusCodBarras = 'FATURA ESCANEADA COM SUCESSO!';
+        statusCodBarras = 'FATURA ESCANEADA!';
       });
       if (code == '-1') return;
       // await getEntregasColetivo(context, codBarras);
@@ -186,9 +254,11 @@ class _EntregaScreenState extends State<EntregaScreen> {
             (result) async => {
               if (result.isNotEmpty)
                 {
+                  //'manufacturer': build.manufacturer,
+                  //'model': build.model,
                   //  print('ENTREI NO IF'),
                   result.forEach((element) {
-                    print('${jsonEncode(element)}');
+                    //print('${jsonEncode(element)}');
                     retornoRest.listaIdEntrega.add(int.tryParse(element['id'].toString()));
                     retornoRest.idImportacao = int.tryParse(element['idImportacao'].toString());
                     retornoRest.idEntrega = int.tryParse(element['id'].toString());
@@ -201,7 +271,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
                     retornoRest.medidor = null;
                     retornoRest.latitude = position.latitude.toString();
                     retornoRest.longitude = position.longitude.toString();
-                    retornoRest.imei = '';
+                    retornoRest.imei = '$_platformImei (${_deviceData['marca']} - ${_deviceData['model']})';
                     retornoRest.codBarras = codBarras;
                     retornoRest.codigo = element['codCliente'];
                     retornoRest.observacao = _obsController.text == null ? '' : _obsController.text.trim();
@@ -251,7 +321,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
                   retornoRest.medidor = null,
                   retornoRest.latitude = position.latitude.toString(),
                   retornoRest.longitude = position.longitude.toString(),
-                  retornoRest.imei = '',
+                  retornoRest.imei = '$_platformImei (${_deviceData['marca']} - ${_deviceData['model']})',
                   retornoRest.codBarras = codBarras,
                   retornoRest.codigo = '0',
                   retornoRest.observacao = _obsController.text == null ? '' : _obsController.text.trim(),
@@ -322,7 +392,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
         foto.instalacao = '';
         foto.nome = '${user.id}${DateFormat("yMdHHmmss").format(DateTime.now())}';
         foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
-        foto.imei = '';
+        foto.imei = '$_platformImei (${_deviceData['marca']} - ${_deviceData['model']})';
         foto.pendente = 1;
         foto.assinatura = 0;
         fotoProvider.insert(
@@ -558,7 +628,6 @@ class _EntregaScreenState extends State<EntregaScreen> {
                               ),
                             )
                           : const Text(''),
-                      // codBarras.trim() != '' ?
                       Center(
                         child: ValueListenableBuilder(
                           valueListenable: dropValue,
@@ -592,8 +661,6 @@ class _EntregaScreenState extends State<EntregaScreen> {
                           },
                         ),
                       ),
-                      //        : const Text(''),
-                      ///  codBarras.trim() != '' ?
                       Container(
                         alignment: Alignment.center,
                         margin: const EdgeInsets.fromLTRB(5, 10, 5, 10),
@@ -610,52 +677,46 @@ class _EntregaScreenState extends State<EntregaScreen> {
                           ),
                           style: Theme.of(context).textTheme.headline5,
                         ),
-                      )
-                      //  : const Text(''),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(5),
+                            child: SizedBox(
+                              height: 60,
+                              width: 160,
+                              child: ElevatedButton(
+                                child: const Text('Entregar'),
+                                onPressed: () => _entregar(context, user),
+                                style: TextButton.styleFrom(
+                                  elevation: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(5),
+                            child: SizedBox(
+                              height: 60,
+                              width: 160,
+                              child: ElevatedButton(
+                                child: const Text('Escanear'),
+                                onPressed: () => readQRCode(context),
+                                style: TextButton.styleFrom(
+                                  elevation: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.all(5),
-                          padding: const EdgeInsets.all(5),
-                          child: SizedBox(
-                            height: 60,
-                            width: 160,
-                            child: ElevatedButton(
-                              child: const Text('ENTREGAR'),
-                              onPressed: () => _entregar(context, user),
-                              style: TextButton.styleFrom(
-                                elevation: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.all(5),
-                          padding: const EdgeInsets.all(5),
-                          child: SizedBox(
-                            height: 60,
-                            width: 160,
-                            child: ElevatedButton(
-                              child: const Text('ESCANEAR'),
-                              onPressed: () => readQRCode(context),
-                              style: TextButton.styleFrom(
-                                elevation: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ],
             );

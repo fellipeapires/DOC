@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     getOcorrenciaApi(context);
     _permissionStorage();
+    //_permissionDeviceInfo();
   }
 
   void _checkInternet(BuildContext context) async {
@@ -52,6 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // void _permissionDeviceInfo() async {
+  //   var statusDeviceInfo = await Permission.phone.status;
+  //   if (!statusDeviceInfo.isGranted) {
+  //     await Permission.storage.request();
+  //   }
+  // }
+
 //verficar caminho do diretório do DB
   void _getDbPath() async {
     await DatabaseApp().getDbPath();
@@ -64,24 +72,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _createBackup(int idUser) async {
+  Future<void> _createBackup(BuildContext context, int idUser) async {
     try {
       setState(() {
         loading.value = true;
       });
 
-      String prefixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
+      String sufixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
 
       List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
       if (listaFoto.isNotEmpty) {
         String fotoJson = jsonEncode(listaFoto);
-        await FileManager().writeJsonFile(fotoJson, 'backup_foto_${prefixBackup}');
+        await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
       }
 
       List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
       if (listaRetornoEntrega.isNotEmpty) {
         String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
-        await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${prefixBackup}');
+        await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${sufixBackup}');
       }
 
       setState(() {
@@ -93,6 +101,30 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       print('$Exc');
       Utility.snackbar(context, 'ERRO NA GERACAO DO BACKUP: $Exc');
+    }
+  }
+
+  void _apagarDados(BuildContext context, int idUser) async {
+    try {
+      await _createBackup(context, idUser);
+
+      setState(() {
+        loading.value = true;
+      });
+
+      await fotoProvider.apagarDados();
+      await entregaProvider.apagarDadosEntrega();
+      await entregaProvider.apagarDadosRetornoEntrega();
+
+      setState(() {
+        loading.value = false;
+      });
+    } catch (Exc) {
+      setState(() {
+        loading.value = false;
+      });
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO APAGAR OS DADOS: $Exc');
     }
   }
 
@@ -772,7 +804,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.backup_sharp,
                               size: 25,
                             ),
-                            onPressed: () => _createBackup(user.id),
+                            onPressed: () => _createBackup(context, user.id),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),
@@ -793,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.delete_forever,
                               size: 24,
                             ),
-                            onPressed: () => null,
+                            onPressed: () => _apagarDados(context, user.id),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),

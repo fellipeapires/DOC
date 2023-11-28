@@ -12,6 +12,7 @@ import 'package:app_doc/provider/ocorrencia_provider.dart';
 import 'package:app_doc/screen/preview_screen.dart';
 import 'package:app_doc/widgets/anexo.dart';
 import 'package:camera_camera/camera_camera.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
@@ -19,6 +20,7 @@ import 'package:app_doc/util/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:imei_plugin/imei_plugin.dart';
 import 'package:intl/intl.dart';
 
 class EntregaColetivoScreen extends StatefulWidget {
@@ -27,6 +29,9 @@ class EntregaColetivoScreen extends StatefulWidget {
 }
 
 class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  Map<String, dynamic> _deviceData = <String, dynamic>{};
+  String _platformImei = 'Unknown';
   final TextEditingController _numeroController = TextEditingController();
   final TextEditingController _obsController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
@@ -50,7 +55,70 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
     _getStatusNet(context);
     _determinePosition();
     _getListaNomeOcorrencia();
+    _initPlatformState();
     //print('${DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now())}');
+  }
+
+  Future<void> _getImei() async {
+    String platformImei;
+    try {
+      platformImei = await ImeiPlugin.getImei(shouldShowRequestPermissionRationale: false);
+      // List<String> multiImei = await ImeiPlugin.getImeiMulti();
+    } catch (e) {
+      platformImei = 'Failed to get platform version.';
+    }
+    if (!mounted) return;
+    setState(() {
+      _platformImei = platformImei;
+    });
+  }
+
+  Future<void> _initPlatformState() async {
+    await _getImei();
+    var deviceData = <String, dynamic>{};
+    try {
+      deviceData = _readAndroidBuildData(await deviceInfoPlugin.androidInfo);
+    } catch (e) {
+      deviceData = <String, dynamic>{'Error:': 'Failed to get platform version.'};
+    }
+    if (!mounted) return;
+    setState(() {
+      _deviceData = deviceData;
+    });
+    //print('${jsonEncode(_deviceData)}');
+  }
+
+  Map<String, dynamic> _readAndroidBuildData(AndroidDeviceInfo build) {
+    return <String, dynamic>{
+      'imei': _platformImei,
+      'version.securityPatch': build.version.securityPatch,
+      'version.sdkInt': build.version.sdkInt,
+      'version.release': build.version.release,
+      'version.previewSdkInt': build.version.previewSdkInt,
+      'version.incremental': build.version.incremental,
+      'version.codename': build.version.codename,
+      'version.baseOS': build.version.baseOS,
+      'board': build.board,
+      'bootloader': build.bootloader,
+      'brand': build.brand,
+      'device': build.device,
+      'display': build.display,
+      'fingerprint': build.fingerprint,
+      'hardware': build.hardware,
+      'host': build.host,
+      'id': build.id,
+      'marca': build.manufacturer,
+      'model': build.model,
+      'product': build.product,
+      'supported32BitAbis': build.supported32BitAbis,
+      'supported64BitAbis': build.supported64BitAbis,
+      'supportedAbis': build.supportedAbis,
+      'tags': build.tags,
+      'type': build.type,
+      'isPhysicalDevice': build.isPhysicalDevice,
+      'androidId': build.androidId,
+      'systemFeatures': build.systemFeatures,
+    };
   }
 
   Future<Position> _determinePosition() async {
@@ -249,7 +317,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
             retornoRest.dataExecucao = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now()),
             retornoRest.latitude = position.latitude.toString(),
             retornoRest.longitude = position.longitude.toString(),
-            retornoRest.imei = '',
+            retornoRest.imei = '$_platformImei (${_deviceData['marca']} - ${_deviceData['model']})',
             retornoRest.observacao = _obsController.text == null ? '' : _obsController.text.trim(),
             retornoRest.assinatura = 0,
             retornoRest.predio = 1,
@@ -292,7 +360,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         foto.instalacao = '';
         foto.nome = '${user.id}${DateFormat("yMdHHmmss").format(DateTime.now())}';
         foto.imagem = 'data:image/jpg;base64,${base64.encode(imagebytes)}';
-        foto.imei = '';
+        foto.imei = '$_platformImei (${_deviceData['marca']} - ${_deviceData['model']})';
         foto.pendente = 1;
         foto.assinatura = 0;
         fotoProvider.insert(
@@ -345,13 +413,9 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
         loading.value = true;
         final List<RetornoEntrega> listaRetorno = [];
         listaRetorno.add(retornoEntrega);
-        //print('LISTA RETORNO ENTREGA');
-        //print('${jsonEncode(listaRetorno).toString()}');
-        // print('${jsonEncode(listaRetorno)}');
         final future = entregaProvider.sincronizarRetornoColetivo(listaRetorno);
         future.then(
           (response) => {
-            // print('RESPONSE: ${response.body}'),
             if (response.body.isNotEmpty)
               {
                 jsonDecode(response.body).forEach(
@@ -436,7 +500,6 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                       Container(
                         alignment: Alignment.center,
                         margin: const EdgeInsets.fromLTRB(5, 5, 5, 5),
-                        //padding: const EdgeInsets.fromLTRB(5, 0, 5, 5),
                         child: Text(
                           'PRIMEIRO INFORME O Nº DO ENDERECO!',
                           style: TextStyle(
@@ -502,104 +565,101 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
                               ),
                             )
                           : const Text(''),
-                      codBarras.trim() != '' || listaCodBarras.isNotEmpty
-                          ? Center(
-                              child: ValueListenableBuilder(
-                                valueListenable: dropValue,
-                                builder: (BuildContext context, String value, _) {
-                                  return Container(
-                                    margin: const EdgeInsets.all(5),
-                                    padding: const EdgeInsets.all(5),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      child: DropdownButtonFormField<String>(
-                                        isExpanded: true,
-                                        icon: const Icon(Icons.arrow_drop_down_circle_sharp),
-                                        hint: const Text('SELECIONE A OCORRENCIA'),
-                                        decoration: InputDecoration(
-                                          label: const Text('OCORRENCIA'),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                          ),
-                                        ),
-                                        value: (value.isEmpty ? null : value),
-                                        onChanged: (selected) => dropValue.value = selected.toString(),
-                                        items: dropOption
-                                            .map((op) => DropdownMenuItem(
-                                                  value: op,
-                                                  child: Text(op),
-                                                ))
-                                            .toList(),
-                                      ),
+                      // codBarras.trim() != '' || listaCodBarras.isNotEmpty
+                      //  ?
+                      Center(
+                        child: ValueListenableBuilder(
+                          valueListenable: dropValue,
+                          builder: (BuildContext context, String value, _) {
+                            return Container(
+                              margin: const EdgeInsets.all(5),
+                              padding: const EdgeInsets.all(5),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.arrow_drop_down_circle_sharp),
+                                  hint: const Text('SELECIONE A OCORRENCIA'),
+                                  decoration: InputDecoration(
+                                    label: const Text('OCORRENCIA'),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(15),
                                     ),
-                                  );
-                                },
-                              ),
-                            )
-                          : const Text(''),
-                      codBarras.trim() != '' || listaCodBarras.isNotEmpty
-                          ? Container(
-                              alignment: Alignment.center,
-                              margin: const EdgeInsets.fromLTRB(5, 10, 5, 10),
-                              padding: const EdgeInsets.fromLTRB(3, 5, 3, 0),
-                              child: TextField(
-                                controller: _obsController,
-                                keyboardType: TextInputType.multiline,
-                                maxLines: 3,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                  labelText: 'OBSERVACAO',
-                                  labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
-                                  hintText: 'OBSERVACAO',
+                                  ),
+                                  value: (value.isEmpty ? null : value),
+                                  onChanged: (selected) => dropValue.value = selected.toString(),
+                                  items: dropOption
+                                      .map((op) => DropdownMenuItem(
+                                            value: op,
+                                            child: Text(op),
+                                          ))
+                                      .toList(),
                                 ),
-                                style: Theme.of(context).textTheme.headline5,
                               ),
-                            )
-                          : const Text(''),
+                            );
+                          },
+                        ),
+                      ),
+                      //    : const Text(''),
+                      //codBarras.trim() != '' || listaCodBarras.isNotEmpty
+                      // ?
+                      Container(
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.fromLTRB(5, 10, 5, 10),
+                        padding: const EdgeInsets.fromLTRB(3, 5, 3, 0),
+                        child: TextField(
+                          controller: _obsController,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                            labelText: 'OBSERVACAO',
+                            labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
+                            hintText: 'OBSERVACAO',
+                          ),
+                          style: Theme.of(context).textTheme.headline5,
+                        ),
+                      ),
+                      //   : const Text(''),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(5),
+                            child: SizedBox(
+                              height: 60,
+                              width: 160,
+                              child: ElevatedButton(
+                                child: const Text('Entregar'),
+                                onPressed: () => _entregar(context, user),
+                                style: TextButton.styleFrom(
+                                  elevation: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(5),
+                            child: SizedBox(
+                              height: 60,
+                              width: 160,
+                              child: ElevatedButton(
+                                child: const Text('Escanear'),
+                                onPressed: () => readQRCode(context),
+                                style: TextButton.styleFrom(
+                                  elevation: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.all(5),
-                          padding: const EdgeInsets.all(5),
-                          child: SizedBox(
-                            height: 60,
-                            width: 160,
-                            child: ElevatedButton(
-                              child: const Text('ENTREGAR'),
-                              onPressed: () => _entregar(context, user),
-                              style: TextButton.styleFrom(
-                                elevation: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.all(5),
-                          padding: const EdgeInsets.all(5),
-                          child: SizedBox(
-                            height: 60,
-                            width: 160,
-                            child: ElevatedButton(
-                              child: const Text('ESCANEAR'),
-                              onPressed: () => readQRCode(context),
-                              style: TextButton.styleFrom(
-                                elevation: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ],
             );
