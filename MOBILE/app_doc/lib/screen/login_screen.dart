@@ -237,7 +237,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(5),
                     child: ClipRRect(
                       child: Image.asset(
-                        'assets/images/logo_felltech.png',
+                        // 'assets/images/logo_felltech.png',
+                        'assets/images/logo_floripark.png',
                         height: 100,
                       ),
                     ),

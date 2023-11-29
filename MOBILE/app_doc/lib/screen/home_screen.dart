@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print, avoid_returning_null_for_void, avoid_function_literals_in_foreach_calls, unused_element
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_key_in_widget_constructors, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unnecessary_this, sort_child_properties_last, unused_local_variable, use_build_context_synchronously, non_constant_identifier_names, avoid_print, avoid_returning_null_for_void, avoid_function_literals_in_foreach_calls, unused_element, await_only_futures
 
 import 'dart:convert';
 //import 'dart:ui';
@@ -6,10 +6,12 @@ import 'dart:convert';
 import 'package:app_doc/component/circular_progress.dart';
 import 'package:app_doc/component/info_app.dart';
 import 'package:app_doc/database/database_app.dart';
+import 'package:app_doc/model/backup.dart';
 import 'package:app_doc/model/entrega.dart';
 import 'package:app_doc/model/ocorrencia.dart';
 import 'package:app_doc/model/retorno_entrega.dart';
 import 'package:app_doc/model/retorno_foto.dart';
+import 'package:app_doc/provider/backup_provider.dart';
 import 'package:app_doc/provider/entrega_provider.dart';
 import 'package:app_doc/provider/foto_provider.dart';
 import 'package:app_doc/provider/ocorrencia_provider.dart';
@@ -30,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final loading = ValueNotifier<bool>(false);
   final entregaProvider = EntregaProvider();
   final ocorrenciaProvider = OcorrenciaProvider();
+  final backupProvider = BackupProvider();
   final fotoProvider = FotoProvider();
   Color colorWifi = Colors.white;
   int contador = 0;
@@ -37,9 +40,70 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   initState() {
     super.initState();
-    getOcorrenciaApi(context);
-    _permissionStorage();
-    //_permissionDeviceInfo();
+    // getOcorrenciaApi(context);
+    // _checkPermission();
+    _initDevice();
+  }
+
+  Future<void> _initDevice() async {
+    setState(() {
+      loading.value = true;
+    });
+    await getOcorrenciaApi(context);
+    await _apagarDadosAuto();
+    setState(() {
+      loading.value = false;
+    });
+    await _permissionDeviceInfo();
+    await _permissionLocation();
+    await _permissionStorage();
+    await _permissionCamera();
+  }
+
+  void _apagarDadosAuto() async {
+    try {
+      String sufixBackup = '${DateFormat("yMdHHmmss").format(DateTime.now())}';
+      String dataBackup = DateFormat("yyyy-MM-dd").format(DateTime.now());
+
+      var isBackupEntrega = await backupProvider.getBackupLast('retorno_entrega');
+      if (isBackupEntrega.isEmpty) {
+        List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
+        if (listaRetornoEntrega.isNotEmpty) {
+          String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
+          await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${sufixBackup}');
+
+          var backupEntrega = Backup();
+          backupEntrega.nome = 'backup_entrega_${sufixBackup}';
+          backupEntrega.tabela = 'retorno_entrega';
+          backupEntrega.dataCriacao = dataBackup;
+          await backupProvider.insert(backupEntrega.toMap());
+          await entregaProvider.apagarDadosEntregaAuto();
+          await entregaProvider.apagarDadosRetornoEntregaAuto();
+        }
+      }
+
+      var isBackupFoto = await backupProvider.getBackupLast('retorno_foto');
+      if (isBackupFoto.isEmpty) {
+        List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+        if (listaFoto.isNotEmpty) {
+          String fotoJson = jsonEncode(listaFoto);
+          await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
+
+          var backupFoto = Backup();
+          backupFoto.nome = 'backup_foto_${sufixBackup}';
+          backupFoto.tabela = 'retorno_foto';
+          backupFoto.dataCriacao = dataBackup;
+          await backupProvider.insert(backupFoto.toMap());
+          await fotoProvider.apagarDadosFotoAuto();
+        }
+      }
+    } catch (Exc) {
+      setState(() {
+        loading.value = false;
+      });
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO APAGAR OS DADOS: $Exc');
+    }
   }
 
   void _checkInternet(BuildContext context) async {
@@ -53,16 +117,24 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // void _permissionDeviceInfo() async {
-  //   var statusDeviceInfo = await Permission.phone.status;
-  //   if (!statusDeviceInfo.isGranted) {
-  //     await Permission.storage.request();
-  //   }
+  // Future<void> _checkPermission() async {
+  //   await _permissionDeviceInfo();
+  //   await _permissionLocation();
+  //   await _permissionStorage();
   // }
 
-//verficar caminho do diretório do DB
-  void _getDbPath() async {
-    await DatabaseApp().getDbPath();
+  void _permissionDeviceInfo() async {
+    var statusDeviceInfo = await Permission.phone.status;
+    if (!statusDeviceInfo.isGranted) {
+      await Permission.phone.request();
+    }
+  }
+
+  void _permissionLocation() async {
+    var statusDeviceLocation = await Permission.location.status;
+    if (!statusDeviceLocation.isGranted) {
+      await Permission.location.request();
+    }
   }
 
   void _permissionStorage() async {
@@ -72,24 +144,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _createBackup(BuildContext context, int idUser) async {
+  void _permissionCamera() async {
+    var statusDeviceCamera = await Permission.camera.status;
+    if (!statusDeviceCamera.isGranted) {
+      await Permission.camera.request();
+    }
+  }
+
+//verficar caminho do diretório do DB
+  void _getDbPath() async {
+    await DatabaseApp().getDbPath();
+  }
+
+  Future<void> _createBackup(BuildContext context) async {
     try {
       setState(() {
         loading.value = true;
       });
 
-      String sufixBackup = '${idUser}${DateFormat("yMdHHmmss").format(DateTime.now())}';
-
-      List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
-      if (listaFoto.isNotEmpty) {
-        String fotoJson = jsonEncode(listaFoto);
-        await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
-      }
+      String sufixBackup = '${DateFormat("yMdHHmmss").format(DateTime.now())}';
 
       List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
       if (listaRetornoEntrega.isNotEmpty) {
         String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
         await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${sufixBackup}');
+      }
+
+      List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+      if (listaFoto.isNotEmpty) {
+        String fotoJson = jsonEncode(listaFoto);
+        await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
       }
 
       setState(() {
@@ -106,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _apagarDados(BuildContext context, int idUser) async {
     try {
-      await _createBackup(context, idUser);
+      await _createBackup(context);
 
       setState(() {
         loading.value = true;
@@ -137,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (Utility.isNet) {
       try {
         await ocorrenciaProvider.deleteAll('ocorrencia');
-        loading.value = true;
+        // loading.value = true;
         Ocorrencia ocorrencia;
         final future = ocorrenciaProvider.getOcorrenciaApi();
         future.then(
@@ -167,10 +251,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               },
             ),
-            loading.value = false,
+            // loading.value = false,
           },
         );
       } catch (Exc) {
+        loading.value = false;
         print('$Exc');
         Utility.snackbar(context, 'ERRO DE DOWNLOAD DE OCORRENCIA: $Exc');
       }
@@ -783,7 +868,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.data_exploration_sharp,
                               size: 24,
                             ),
-                            onPressed: () => _setPage(context, AppRoutes.PRODUTIVIDADE, user),
+                            // onPressed: () => _setPage(context, AppRoutes.PRODUTIVIDADE, user),
+                            onPressed: null,
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),
@@ -804,7 +890,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icons.backup_sharp,
                               size: 25,
                             ),
-                            onPressed: () => _createBackup(context, user.id),
+                            onPressed: () => _createBackup(context),
                             style: TextButton.styleFrom(
                               elevation: 10,
                             ),

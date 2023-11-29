@@ -13,6 +13,7 @@ class DatabaseApp {
     return sql.openDatabase(
       path.join(dbPath, 'doc.db'),
       onCreate: (db, version) {
+        db.execute('CREATE TABLE IF NOT EXISTS backup(id integer primary key AUTOINCREMENT NOT NULL, nome TEXT, tabela TEXT, dataCriacao DATE)');
         db.execute('CREATE TABLE IF NOT EXISTS usuario(id integer primary key NOT NULL, idRegional integer, regional TEXT, login TEXT, senha TEXT, matricula TEXT, nome TEXT, situacao integer)');
         db.execute(
             'CREATE TABLE IF NOT EXISTS entrega(id integer primary key NOT NULL, codBarras TEXT, codCliente TEXT, sequencia TEXT, roteiro TEXT, endereco TEXT, cep TEXT, municipio TEXT, grupoFaturamento integer, idGrupoFaturamento integer, idImportacao integer, observacao TEXT, pendente integer)');

@@ -157,4 +157,14 @@ class EntregaProvider {
     final db = await DatabaseApp.dataBase();
     return db.rawDelete('DELETE FROM retorno_entrega WHERE pendente = 0');
   }
+
+  Future<void> apagarDadosEntregaAuto() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete("DELETE FROM entrega WHERE pendente = 0 AND codBarras in (select codBarras from retorno_entrega where pendente = 0 AND dataExecucao < date('now', 'start of day', '-1 day'))");
+  }
+
+  Future<void> apagarDadosRetornoEntregaAuto() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete("DELETE FROM retorno_entrega WHERE pendente = 0 AND dataExecucao < date('now', 'start of day', '-1 day')");
+  }
 }

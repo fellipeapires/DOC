@@ -51,4 +51,9 @@ class FotoProvider {
     final db = await DatabaseApp.dataBase();
     return db.rawDelete('DELETE FROM retorno_foto WHERE pendente = 0');
   }
+
+  Future<void> apagarDadosFotoAuto() async {
+    final db = await DatabaseApp.dataBase();
+    return db.rawDelete("DELETE FROM retorno_foto WHERE pendente = 0 AND dataExecucao < date('now', 'start of day', '-1 day')");
+  }
 }
