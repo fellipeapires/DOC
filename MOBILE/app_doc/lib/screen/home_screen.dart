@@ -40,8 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   initState() {
     super.initState();
-    // getOcorrenciaApi(context);
-    // _checkPermission();
     _initDevice();
   }
 
@@ -116,12 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
   }
-
-  // Future<void> _checkPermission() async {
-  //   await _permissionDeviceInfo();
-  //   await _permissionLocation();
-  //   await _permissionStorage();
-  // }
 
   void _permissionDeviceInfo() async {
     var statusDeviceInfo = await Permission.phone.status;
