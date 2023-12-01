@@ -33,4 +33,16 @@ class User {
     data['situacao'] = this.situacao;
     return data;
   }
+
+  User toObject(User user, Map<String, dynamic> data) {
+    user.id = data['id'];
+    user.idRegional = data['idRegional'];
+    user.regional = data['regional'];
+    user.nome = data['nome'];
+    user.login = data['login'];
+    user.senha = data['matricula'];
+    user.matricula = data['matricula'];
+    user.situacao = data['situacao'];
+    return user;
+  }
 }
