@@ -25,6 +25,20 @@ class RetornoFoto {
     this.assinatura,
   });
 
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> data = Map<String, dynamic>();
+    data['id'] = this.id;
+    data['idUsuario'] = this.idUsuario;
+    data['nome'] = this.nome;
+    data['dataExecucao'] = this.dataExecucao;
+    data['codBarras'] = this.codBarras;
+    data['instalacao'] = this.instalacao;
+    data['imagem'] = this.imagem;
+    data['imei'] = this.imei;
+    data['assinatura'] = this.assinatura;
+    return data;
+  }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['idUsuario'] = this.idUsuario;

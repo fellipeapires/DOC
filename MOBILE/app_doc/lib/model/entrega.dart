@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_collection_literals, unnecessary_this
+
 class Entrega {
   int id;
   String codBarras;
@@ -28,4 +30,22 @@ class Entrega {
     this.observacao,
     this.pendente,
   });
+
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> data = Map<String, dynamic>();
+    data['id'] = id;
+    data['codBarras'] = this.codBarras;
+    data['codCliente'] = this.codCliente;
+    data['sequencia'] = sequencia;
+    data['roteiro'] = this.roteiro;
+    data['endereco'] = this.endereco;
+    data['cep'] = cep;
+    data['municipio'] = this.municipio;
+    data['grupoFaturamento'] = this.grupoFaturamento;
+    data['idGrupoFaturamento'] = this.idGrupoFaturamento;
+    data['idImportacao'] = this.idImportacao;
+    data['observacao'] = this.observacao;
+    data['pendente'] = this.pendente;
+    return data;
+  }
 }

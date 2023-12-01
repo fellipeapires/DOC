@@ -49,6 +49,33 @@ class RetornoEntrega {
     this.listaIdEntrega,
   });
 
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> data = Map<String, dynamic>();
+    data['id'] = id;
+    data['idImportacao'] = idImportacao;
+    data['idEntrega'] = this.idEntrega;
+    data['idUsuario'] = this.idUsuario;
+    data['idOcorrencia'] = idOcorrencia;
+    data['dataExecucao'] = this.dataExecucao;
+    data['codBarras'] = this.codBarras;
+    data['codigo'] = this.codigo;
+    data['longitude'] = this.longitude;
+    data['latitude'] = this.latitude;
+    data['observacao'] = this.observacao;
+    data['instalacao'] = this.instalacao;
+    data['medidor'] = this.medidor;
+    data['matricula'] = this.matricula;
+    data['assinatura'] = this.assinatura;
+    data['pendente'] = this.pendente;
+    data['imei'] = this.imei;
+    data['grupoFaturamento'] = this.grupoFaturamento;
+    data['roteiro'] = this.roteiro;
+    data['predio'] = this.predio;
+    data['versaoApp'] = this.versaoApp;
+    data['listaIdEntrega'] = this.listaIdEntrega;
+    return data;
+  }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['idImportacao'] = idImportacao;
@@ -56,18 +83,18 @@ class RetornoEntrega {
     data['idUsuario'] = this.idUsuario;
     data['idOcorrencia'] = idOcorrencia;
     data['dataExecucao'] = this.dataExecucao;
-    data['longitude'] = this.longitude;
-    data['latitude'] = this.latitude;
     data['codigoBarrasQr'] = this.codBarras;
     data['codigo'] = this.codigo;
+    data['longitude'] = this.longitude;
+    data['latitude'] = this.latitude;
     data['observacao'] = this.observacao;
+    data['instalacao'] = this.instalacao;
+    data['matricula'] = this.matricula;
     data['assinatura'] = this.assinatura;
     data['pendente'] = this.pendente;
     data['imei'] = this.imei;
-    data['instalacao'] = this.instalacao;
-    data['matricula'] = this.matricula;
-    data['roteiro'] = this.roteiro;
     data['grupoFaturamento'] = this.grupoFaturamento;
+    data['roteiro'] = this.roteiro;
     data['predio'] = this.predio;
     data['versaoApp'] = this.versaoApp;
     data['listaIdEntrega'] = this.listaIdEntrega;
