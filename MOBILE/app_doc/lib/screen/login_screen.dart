@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, non_constant_identifier_names, avoid_print, avoid_unnecessary_containers, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unused_local_variable, avoid_function_literals_in_foreach_calls, prefer_collection_literals, deprecated_member_use, prefer_const_declarations, avoid_init_to_null, missing_return, unused_label, use_build_context_synchronously, avoid_returning_null_for_void, unused_import, unnecessary_this
+// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, non_constant_identifier_names, avoid_print, avoid_unnecessary_containers, unnecessary_string_interpolations, unnecessary_brace_in_string_interps, unused_local_variable, avoid_function_literals_in_foreach_calls, prefer_collection_literals, deprecated_member_use, prefer_const_declarations, avoid_init_to_null, missing_return, unused_label, use_build_context_synchronously, avoid_returning_null_for_void, unused_import, unnecessary_this, await_only_futures
 
 import 'dart:convert';
 import 'package:app_doc/provider/user_provider.dart';
@@ -19,9 +19,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _senhaController = TextEditingController();
   final loading = ValueNotifier<bool>(false);
   final userProvider = UserProvider();
-  final List<User> listaUser = [];
   Color colorWifi = Colors.white;
   int contadorMsgNet = 0;
+  User user = User();
 
   @override
   initState() {
@@ -49,31 +49,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> getUsuario(String login, String senha) async {
-    var user = null;
-    if (listaUser.isNotEmpty) {
-      setState(() {
-        listaUser.clear();
-      });
+    if (user.id != null) {
+      user = User();
     }
-    await userProvider.getUsuario(login, senha).then((result) => {
-          result.forEach(
-            (element) => {
-              user = User(),
-              user.id = element['id'],
-              user.idRegional = element['idRegional'],
-              user.regional = element['regional'],
-              user.nome = element['nome'],
-              user.login = element['login'],
-              user.senha = element['senha'],
-              user.matricula = element['matricula'],
-              user.situacao = element['situacao'],
-              listaUser.add(user),
-            },
-          ),
-          setState(() {
-            listaUser;
-          }),
-        });
+    try {
+      await userProvider.getUsuario(login, senha).then((result) => {
+            if (result.isNotEmpty)
+              {
+                user = user.toObject(user, result[0]),
+              },
+            setState(() {
+              user;
+            }),
+          });
+    } catch (Exc) {
+      print('$Exc');
+      Utility.snackbar(context, 'ERRO AO BUSCAR USUARIO!');
+    }
   }
 
   Future<void> _autenticar(BuildContext context) async {
@@ -81,16 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     await getUsuario(_loginController.text, _senhaController.text);
-    bool isUser = false;
-    User user = User();
-    for (int i = 0; i < listaUser.length; i++) {
-      if (_loginController.text == listaUser[i].login && _senhaController.text == listaUser[i].senha) {
-        isUser = true;
-        user = listaUser[i];
-        break;
-      }
-    }
-    if (isUser) {
+    if (user.id != null) {
       _loginController.text = '';
       _senhaController.text = '';
       Utility.setAppRouter(context, AppRoutes.HOME, user);
@@ -102,39 +85,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Future<int> convertToInt(String value) async {
+    int newValue = int.tryParse(value);
+    return newValue;
+  }
+
   Future<void> getUserApi(BuildContext context) async {
     await Utility.getStatusNet(context);
     if (Utility.isNet) {
       try {
         await userProvider.deleteAll('usuario');
         loading.value = true;
-        User user;
+        User userApi;
         final future = userProvider.getUser();
         future.then(
           (response) => {
             jsonDecode(response.body).forEach(
-              (element) => {
-                user = User(),
-                user.id = int.tryParse(element['id'].toString()),
-                user.idRegional = int.tryParse(element['idRegional'].toString()),
-                user.regional = element['regional'],
-                user.nome = element['nome'],
-                user.login = element['login'],
-                user.senha = element['matricula'],
-                user.matricula = element['matricula'],
-                user.situacao = int.tryParse(element['ativo'].toString()),
-                userProvider.insert(
-                  {
-                    'id': user.id,
-                    'idRegional': user.idRegional,
-                    'regional': user.regional,
-                    'nome': user.nome,
-                    'login': user.login,
-                    'senha': user.senha,
-                    'matricula': user.matricula,
-                    'situacao': user.situacao,
-                  },
-                ),
+              (element) async => {
+                element['id'] = await convertToInt(element['id'].toString()),
+                userApi = User(),
+                userApi = userApi.toObject(userApi, element),
+                userProvider.insert(userApi.toMap()),
               },
             ),
             loading.value = false,
