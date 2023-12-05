@@ -66,8 +66,15 @@ class _HomeScreenState extends State<HomeScreen> {
       var isBackupEntrega = await backupProvider.getBackupLast('retorno_entrega');
       if (isBackupEntrega.isEmpty) {
         List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
+
+        var lista = [];
         if (listaRetornoEntrega.isNotEmpty) {
-          String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
+          var retornoRest = RetornoEntrega();
+          listaRetornoEntrega.forEach((element) {
+            retornoRest = retornoRest.toObject(retornoRest, element);
+            lista.add(retornoRest);
+          });
+          String retornoEntregaJson = jsonEncode(lista);
           await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${sufixBackup}');
 
           var backupEntrega = Backup();
@@ -83,8 +90,23 @@ class _HomeScreenState extends State<HomeScreen> {
       var isBackupFoto = await backupProvider.getBackupLast('retorno_foto');
       if (isBackupFoto.isEmpty) {
         List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+
+        var listaFotoRest = [];
         if (listaFoto.isNotEmpty) {
-          String fotoJson = jsonEncode(listaFoto);
+          listaFoto.forEach((element) {
+            var fotoResrt = RetornoFoto();
+            fotoResrt.idUsuario = int.tryParse(element['idUsuario'].toString());
+            fotoResrt.nome = element['nome'];
+            fotoResrt.dataExecucao = element['dataExecucao'];
+            fotoResrt.codBarras = element['codBarras'];
+            fotoResrt.instalacao = element['instalacao'];
+            fotoResrt.imagem = element['imagem'];
+            fotoResrt.imei = element['imei'];
+            fotoResrt.pendente = int.tryParse(element['pendente'].toString());
+            fotoResrt.assinatura = int.tryParse(element['assinatura'].toString());
+            listaFotoRest.add(fotoResrt);
+          });
+          String fotoJson = jsonEncode(listaFotoRest);
           await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
 
           var backupFoto = Backup();
@@ -155,16 +177,35 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       String sufixBackup = '${DateFormat("yMdHHmmss").format(DateTime.now())}';
-
       List<Map<String, dynamic>> listaRetornoEntrega = await entregaProvider.getRetornoEntregaAll();
+      var lista = [];
       if (listaRetornoEntrega.isNotEmpty) {
-        String retornoEntregaJson = jsonEncode(listaRetornoEntrega);
+        var retornoRest = RetornoEntrega();
+        listaRetornoEntrega.forEach((element) {
+          retornoRest = retornoRest.toObject(retornoRest, element);
+          lista.add(retornoRest);
+        });
+        String retornoEntregaJson = jsonEncode(lista);
         await FileManager().writeJsonFile(retornoEntregaJson, 'backup_entrega_${sufixBackup}');
       }
 
       List<Map<String, dynamic>> listaFoto = await fotoProvider.getFotoAll();
+      var listaFotoRest = [];
       if (listaFoto.isNotEmpty) {
-        String fotoJson = jsonEncode(listaFoto);
+        listaFoto.forEach((element) {
+          var fotoResrt = RetornoFoto();
+          fotoResrt.idUsuario = int.tryParse(element['idUsuario'].toString());
+          fotoResrt.nome = element['nome'];
+          fotoResrt.dataExecucao = element['dataExecucao'];
+          fotoResrt.codBarras = element['codBarras'];
+          fotoResrt.instalacao = element['instalacao'];
+          fotoResrt.imagem = element['imagem'];
+          fotoResrt.imei = element['imei'];
+          fotoResrt.pendente = int.tryParse(element['pendente'].toString());
+          fotoResrt.assinatura = int.tryParse(element['assinatura'].toString());
+          listaFotoRest.add(fotoResrt);
+        });
+        String fotoJson = jsonEncode(listaFotoRest);
         await FileManager().writeJsonFile(fotoJson, 'backup_foto_${sufixBackup}');
       }
 
@@ -221,26 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
             jsonDecode(response.body).forEach(
               (element) => {
                 ocorrencia = Ocorrencia(),
-                ocorrencia.id = int.tryParse(element['id'].toString()),
-                ocorrencia.nome = element['nome'],
-                ocorrencia.codigo = int.tryParse(element['codigo'].toString()),
-                ocorrencia.tipo = int.tryParse(element['tipo'].toString()),
-                ocorrencia.situacao = int.tryParse(element['ativo'].toString()),
-                ocorrencia.situacaoFoto = int.tryParse(element['situacaoFoto'].toString()),
-                ocorrencia.qtdMinimaFoto = int.tryParse(element['qtMinimaFoto'].toString()),
-                ocorrencia.dataAtualizacao = element['dataAtualizacao'],
-                ocorrenciaProvider.insert(
-                  {
-                    'id': ocorrencia.id,
-                    'nome': ocorrencia.nome,
-                    'codigo': ocorrencia.codigo,
-                    'tipo': ocorrencia.tipo,
-                    'situacao': ocorrencia.situacao,
-                    'situacaoFoto': ocorrencia.situacaoFoto,
-                    'qtdMinimaFoto': ocorrencia.qtdMinimaFoto,
-                    'dataAtualizacao': ocorrencia.dataAtualizacao,
-                  },
-                ),
+                ocorrencia = ocorrencia.toObject(ocorrencia, element),
+                ocorrenciaProvider.insert(ocorrencia.toMap()),
               },
             ),
             // loading.value = false,
@@ -272,36 +295,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     (element) => {
                       listaIdEntrega.add(int.tryParse(element['idEntrega'].toString())),
                       entrega = Entrega(),
-                      entrega.id = int.tryParse(element['idEntrega'].toString()),
-                      entrega.idImportacao = int.tryParse(element['idImportacao'].toString()),
-                      entrega.idGrupoFaturamento = int.tryParse(element['idGrupoFaturamento'].toString()),
-                      entrega.grupoFaturamento = int.tryParse(element['grupoFaturamento'].toString()),
-                      entrega.roteiro = element['roteiro'],
-                      entrega.sequencia = element['sequencia'],
-                      entrega.municipio = element['municipio'],
-                      entrega.endereco = element['endereco'],
-                      entrega.cep = element['cep'],
-                      entrega.codCliente = element['codCliente'],
-                      entrega.codBarras = element['codBarras'],
-                      entrega.observacao = element['observacao'],
                       entrega.pendente = 1,
-                      entregaProvider.insert(
-                        {
-                          'id': entrega.id,
-                          'grupoFaturamento': entrega.grupoFaturamento,
-                          'idImportacao': entrega.idImportacao,
-                          'roteiro': entrega.roteiro,
-                          'idGrupoFaturamento': entrega.idGrupoFaturamento,
-                          'sequencia': entrega.sequencia,
-                          'municipio': entrega.municipio,
-                          'endereco': entrega.endereco,
-                          'cep': entrega.cep,
-                          'codCliente': entrega.codCliente,
-                          'codBarras': entrega.codBarras,
-                          'observacao': entrega.observacao,
-                          'pendente': entrega.pendente
-                        },
-                      ),
+                      entrega = entrega.toObject(entrega, element),
+                      entregaProvider.insert(entrega.toMap()),
                     },
                   ),
                   getEntregasAssociadas(context, idUsuario, listaIdEntrega),
@@ -368,25 +364,10 @@ class _HomeScreenState extends State<HomeScreen> {
               result.forEach(
                 (element) => {
                   retornoRest = RetornoEntrega(),
-                  retornoRest.idImportacao = int.tryParse(element['idImportacao'].toString()),
-                  retornoRest.idUsuario = int.tryParse(element['idUsuario'].toString()),
-                  retornoRest.idEntrega = int.tryParse(element['idEntrega'].toString()),
-                  retornoRest.idOcorrencia = int.tryParse(element['idOcorrencia'].toString()),
-                  retornoRest.codBarras = element['codBarras'],
-                  retornoRest.codigo = element['codigo'],
-                  retornoRest.dataExecucao = element['dataExecucao'],
-                  retornoRest.latitude = element['laitude'],
-                  retornoRest.longitude = element['longitude'],
-                  retornoRest.imei = element['imei'],
-                  retornoRest.observacao = element['observacao'],
-                  retornoRest.assinatura = int.tryParse(element['assinatura'].toString()),
-                  retornoRest.matricula = element['matricula'],
-                  retornoRest.predio = int.tryParse(element['predio'].toString()),
-                  retornoRest.versaoApp = element['versaoApp'],
+                  retornoRest = retornoRest.toObject(retornoRest, element),
                   listaRetorno.add(retornoRest),
                 },
               ),
-              // print('${jsonEncode(listaRetorno).toString()}'),
               sincronizarRetornoEntrega(context, listaRetorno),
             }
           else

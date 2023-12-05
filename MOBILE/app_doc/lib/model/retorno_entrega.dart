@@ -76,6 +76,32 @@ class RetornoEntrega {
     return data;
   }
 
+  RetornoEntrega toObject(RetornoEntrega retornoEntrega, Map<String, dynamic> data) {
+    retornoEntrega.id = data['id'];
+    retornoEntrega.idImportacao = data['idImportacao'];
+    retornoEntrega.idEntrega = data['idEntrega'];
+    retornoEntrega.idUsuario = data['idUsuario'];
+    retornoEntrega.idOcorrencia = data['idOcorrencia'];
+    retornoEntrega.dataExecucao = data['dataExecucao'];
+    retornoEntrega.codBarras = data['codBarras'];
+    retornoEntrega.codigo = data['codigo'];
+    retornoEntrega.longitude = data['longitude'];
+    retornoEntrega.latitude = data['latitude'];
+    retornoEntrega.observacao = data['observacao'];
+    retornoEntrega.observacao = data['instalacao'];
+    retornoEntrega.medidor = data['medidor'];
+    retornoEntrega.matricula = data['matricula'];
+    retornoEntrega.assinatura = data['assinatura'];
+    retornoEntrega.pendente = data['pendente'];
+    retornoEntrega.imei = data['imei'];
+    retornoEntrega.grupoFaturamento = data['grupoFaturamento'];
+    retornoEntrega.roteiro = data['roteiro'];
+    retornoEntrega.predio = data['predio'];
+    retornoEntrega.versaoApp = data['versaoApp'];
+    retornoEntrega.listaIdEntrega = data['listaIdEntrega'];
+    return retornoEntrega;
+  }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['idImportacao'] = idImportacao;

@@ -33,4 +33,16 @@ class Ocorrencia {
     data['dataAtualizacao'] = this.dataAtualizacao;
     return data;
   }
+
+  Ocorrencia toObject(Ocorrencia ocorrencia, Map<String, dynamic> data) {
+    ocorrencia.id = data['id'];
+    ocorrencia.nome = data['nome'];
+    ocorrencia.codigo = data['codigo'];
+    ocorrencia.tipo = data['tipo'];
+    ocorrencia.situacao = data['situacao'];
+    ocorrencia.situacaoFoto = data['situacaoFoto'];
+    ocorrencia.qtdMinimaFoto = data['qtdMinimaFoto'];
+    ocorrencia.dataAtualizacao = data['dataAtualizacao'];
+    return ocorrencia;
+  }
 }

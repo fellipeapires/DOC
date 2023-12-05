@@ -48,4 +48,20 @@ class Entrega {
     data['pendente'] = this.pendente;
     return data;
   }
+
+  Entrega toObject(Entrega entrega, Map<String, dynamic> data) {
+    entrega.id = data['idEntrega'];
+    entrega.codBarras = data['codBarras'];
+    entrega.codCliente = data['codCliente'];
+    entrega.sequencia = data['sequencia'];
+    entrega.roteiro = data['roteiro'];
+    entrega.endereco = data['endereco'];
+    entrega.cep = data['cep'];
+    entrega.municipio = data['municipio'];
+    entrega.grupoFaturamento = data['grupoFaturamento'];
+    entrega.idGrupoFaturamento = data['idGrupoFaturamento'];
+    entrega.idImportacao = data['idImportacao'];
+    entrega.observacao = data['observacao'];
+    return entrega;
+  }
 }
