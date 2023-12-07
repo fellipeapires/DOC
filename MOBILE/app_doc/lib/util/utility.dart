@@ -28,8 +28,8 @@ class Utility {
       'ano': '2023',
       'contrato': 'COMGAS',
       'copyRight': 'Copyright ©',
-      'versao': '1.0.0',
-      'textoVersao': 'Versão 1.0.0',
+      'versao': '1.0.1',
+      'textoVersao': 'Versão 1.0.1',
       'textoCopyRight': 'Copyright © 2023',
     };
   }

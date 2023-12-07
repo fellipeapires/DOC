@@ -44,7 +44,7 @@ class _EntregaColetivoScreenState extends State<EntregaColetivoScreen> {
   String enderecoColetivo = '';
   Color colorWifi = Colors.white;
   File arquivo;
-  String versaoApp = Utility.getDadosApp().values.elementAt(5);
+  String versaoApp = Utility.getDadosApp().values.elementAt(4);
   final dropValue = ValueNotifier('');
   final List<String> dropOption = [];
 

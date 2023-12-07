@@ -232,6 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await fotoProvider.apagarDados();
       await entregaProvider.apagarDadosEntrega();
       await entregaProvider.apagarDadosRetornoEntrega();
+      await entregaProvider.apagarDadosRetornoEntrega9999();
 
       setState(() {
         loading.value = false;

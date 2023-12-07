@@ -42,7 +42,7 @@ class _EntregaScreenState extends State<EntregaScreen> {
   Color colorWifi = Colors.white;
   Color colorStatusFatura = Colors.green[800];
   File arquivo;
-  String versaoApp = Utility.getDadosApp().values.elementAt(5);
+  String versaoApp = Utility.getDadosApp().values.elementAt(4);
   final dropValue = ValueNotifier('');
   final List<String> dropOption = [];
   var isExiste = [];
@@ -193,12 +193,14 @@ class _EntregaScreenState extends State<EntregaScreen> {
         true,
         ScanMode.BARCODE,
       );
-      setState(() {
-        codBarras = code != '-1' ? code : '';
-        statusCodBarras = 'FATURA ESCANEADA!';
-      });
       if (code == '-1') return;
-      // await getEntregasColetivo(context, codBarras);
+      setState(() {
+        codBarras = code != '-1' && code.length >= 24 ? code : '';
+        statusCodBarras = codBarras.length >= 24 ? 'FATURA ESCANEADA!' : '';
+      });
+      if (codBarras.length < 24) {
+        Utility.snackbar(context, 'FALHA NA LEITURA DO CODIGO!');
+      }
     } catch (Exc) {
       print('$Exc');
       Utility.snackbar(context, 'ERRO AO LER O CODIGO!: $Exc');
@@ -280,30 +282,6 @@ class _EntregaScreenState extends State<EntregaScreen> {
                     retornoRest.pendente = 1;
                     retornoRest.matricula = '';
                     retornoRest.versaoApp = versaoApp;
-                    /* entregaProvider.insertRetornoEntrega(
-                      {
-                        'idImportacao': retornoRest.idImportacao,
-                        'idEntrega': retornoRest.idEntrega,
-                        'idUsuario': retornoRest.idUsuario,
-                        'idOcorrencia': retornoRest.idOcorrencia,
-                        'grupoFaturamento': retornoRest.grupoFaturamento,
-                        'dataExecucao': retornoRest.dataExecucao,
-                        'roteiro': retornoRest.roteiro,
-                        'instalacao': retornoRest.instalacao,
-                        'medidor': retornoRest.medidor,
-                        'matricula': retornoRest.matricula,
-                        'codBarras': retornoRest.codBarras,
-                        'codCliente': retornoRest.codigo,
-                        'imei': retornoRest.imei,
-                        'observacao': retornoRest.observacao,
-                        'latitude': retornoRest.latitude,
-                        'longitude': retornoRest.longitude,
-                        'assinatura': retornoRest.assinatura,
-                        'predio': retornoRest.predio,
-                        'pendente': retornoRest.pendente,
-                        'versaoApp': retornoRest.versaoApp,
-                      },
-                    );*/
                   }),
                 }
               else
@@ -330,30 +308,6 @@ class _EntregaScreenState extends State<EntregaScreen> {
                   retornoRest.pendente = 1,
                   retornoRest.matricula = '',
                   retornoRest.versaoApp = versaoApp,
-                  /*  entregaProvider.insertRetornoEntrega(
-                    {
-                      'idImportacao': retornoRest.idImportacao,
-                      'idEntrega': retornoRest.idEntrega,
-                      'idUsuario': retornoRest.idUsuario,
-                      'idOcorrencia': retornoRest.idOcorrencia,
-                      'grupoFaturamento': retornoRest.grupoFaturamento,
-                      'dataExecucao': retornoRest.dataExecucao,
-                      'roteiro': retornoRest.roteiro,
-                      'instalacao': retornoRest.instalacao,
-                      'medidor': retornoRest.medidor,
-                      'matricula': retornoRest.matricula,
-                      'codBarras': retornoRest.codBarras,
-                      'codCliente': retornoRest.codigo,
-                      'imei': retornoRest.imei,
-                      'observacao': retornoRest.observacao,
-                      'latitude': retornoRest.latitude,
-                      'longitude': retornoRest.longitude,
-                      'assinatura': retornoRest.assinatura,
-                      'predio': retornoRest.predio,
-                      'pendente': retornoRest.pendente,
-                      'versaoApp': retornoRest.versaoApp,
-                    },
-                  ),*/
                 },
               //  print('RETORNO REST: ${jsonEncode(retornoRest)}'),
               await entregaProvider.insertRetornoEntrega(
@@ -451,9 +405,6 @@ class _EntregaScreenState extends State<EntregaScreen> {
         loading.value = true;
         final List<RetornoEntrega> listaRetorno = [];
         listaRetorno.add(retornoEntrega);
-        //print('LISTA RETORNO ENTREGA');
-        //print('${jsonEncode(listaRetorno).toString()}');
-        //print('${jsonEncode(listaRetorno)}');
         final future = entregaProvider.sincronizarRetorno(listaRetorno);
         future.then(
           (response) => {
